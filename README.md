@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/jackmcguire1/UserService.svg?branch=main)](hhttps://travis-ci.org/jackmcguire1/UserService)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jackmcguire1/UserService)](https://goreportcard.com/report/github.com/jackmcguire1/UserService)
+[![codecov](https://codecov.io/gh/jackmcguire1/UserService/branch/main/graph/badge.svg?token=URT8YBBJFF)](https://codecov.io/gh/jackmcguire1/UserService)
 
 [git]:    https://git-scm.com/
 [golang]: https://golang.org/
