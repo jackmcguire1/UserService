@@ -1,0 +1,12 @@
+
+language: go
+
+go:
+  - "1.16.x"
+
+install:
+  - go test -race -cover -coverprofile=coverage.txt -covermode=atomic ./...
+  - go mod download
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
