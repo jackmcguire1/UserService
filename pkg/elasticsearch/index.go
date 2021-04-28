@@ -81,6 +81,32 @@ func (es *ElasticSearch) GetDoc(docID string, v interface{}) (err error) {
 	return
 }
 
+func (es *ElasticSearch) DeleteDoc(docID string) (err error) {
+	ctx := context.Background()
+
+	idx := es.client.Delete().Index(es.Name).Type("_doc").Id(docID)
+	if docID != "" {
+		idx = idx.Id(docID)
+	}
+	result, err := idx.Do(ctx)
+	if err != nil {
+		var elasticErr *elastic.Error
+		if errors.As(err, &elasticErr) {
+			if elasticErr.Status == http.StatusNotFound {
+				err = fmt.Errorf("failed to find doc %s %w", err, utils.ErrNotFound)
+			}
+		}
+
+		return
+	}
+
+	if result.Result != "deleted" {
+		err = fmt.Errorf("failed to deleted doc %q", utils.ToJSON(result))
+	}
+
+	return
+}
+
 func (es *ElasticSearch) DeleteIndex() (err error) {
 	ctx := context.Background()
 	_, err = es.client.DeleteIndex(es.Name).Do(ctx)

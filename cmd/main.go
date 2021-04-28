@@ -18,6 +18,7 @@ var (
 	elasticSearchHost       string
 	elasticSearchPort       string
 	elasticSearchSecondPort string
+	elasticSearchUserIndex string
 
 	listenPort string
 	listenHost string
@@ -27,7 +28,7 @@ func init() {
 	elasticSearchHost = os.Getenv("ELASTIC_HOST")
 	elasticSearchPort = os.Getenv("ELASTIC_PORT")
 	elasticSearchSecondPort = os.Getenv("ELASTIC_SECOND_PORT")
-
+	elasticSearchUserIndex = os.Getenv("ELASTIC_USER_INDEX")
 	listenPort = os.Getenv("LISTEN_PORT")
 	listenHost = os.Getenv("LISTEN_HOST")
 
@@ -37,7 +38,7 @@ func init() {
 			Host:          elasticSearchHost,
 			Port:          elasticSearchPort,
 			SecondPort:    elasticSearchPort,
-			UserIndexName: "users_svc",
+			UserIndexName: elasticSearchUserIndex,
 		}),
 	})
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/google/uuid"
+	"github.com/jackmcguire1/UserService/pkg/utils"
 )
 
 type User struct {
@@ -33,7 +34,7 @@ func (svc *service) GetUser(userID string) (*User, error) {
 }
 
 func (svc *service) PutUser(u *User) (*User, error) {
-	logEntry := log.WithField("user", u)
+	logEntry := log.WithField("user", utils.ToJSON(u))
 	logEntry.Info("call PutUser")
 
 	if u == nil {
@@ -55,9 +56,10 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		}
 		u.ID = guid.String()
 
-		logEntry.
-			WithField("user-id", u.ID).
-			Debug("uuid generated for new user")
+		logEntry = logEntry.
+			WithField("user-id", u.ID)
+
+		logEntry.Debug("generated new uuid for user")
 	}
 
 	u.Saved = time.Now().Format(time.RFC3339)
@@ -75,6 +77,10 @@ func (svc *service) PutUser(u *User) (*User, error) {
 	return u, err
 }
 
+func (svc *service) DeleteUser(id string) error {
+	return svc.Repo.DeleteUser(id)
+}
+
 func (svc *service) GetUsersByCountry(countryCode string, cursor string, limit int) ([]*User, string, error) {
 	logEntry := log.
 		WithField("country-code", countryCode)
@@ -85,7 +91,7 @@ func (svc *service) GetUsersByCountry(countryCode string, cursor string, limit i
 		Info("call GetUsersByCountry")
 
 	logEntry.Debug("querying get all users")
-	users, bookmark, err := svc.Repo.GetAllUsers(cursor, 100)
+	users, bookmark, err := svc.Repo.GetAllUsers(cursor, limit)
 	if err != nil {
 		logEntry.
 			WithError(err).
@@ -95,10 +101,7 @@ func (svc *service) GetUsersByCountry(countryCode string, cursor string, limit i
 	}
 
 	logEntry.
-		WithField("user-batch", users).
-		Debug("got get all users after query")
-
-	logEntry.
+		WithField("user-batch", utils.ToJSON(users)).
 		WithField("len-users", len(users)).
 		Debug("got users from repository")
 

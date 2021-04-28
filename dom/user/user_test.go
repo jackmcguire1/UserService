@@ -47,6 +47,20 @@ func TestPutUser(t *testing.T) {
 	assert.NotEmpty(t, user.Saved)
 }
 
+
+func TestDeleteUser(t *testing.T) {
+	mockRepo := &MockRepository{}
+
+	mockRepo.On("DeleteUser", mock.Anything).Return(nil)
+	svc, err := NewService(&Resources{
+		Repo: mockRepo,
+	})
+	assert.NoError(t, err)
+
+	err = svc.DeleteUser("100249558")
+	assert.NoError(t, err)
+}
+
 func TestGetUsersByCountry(t *testing.T) {
 	users := []*User{
 		&User{

@@ -1,7 +1,20 @@
-FROM golang:1.16.3-stretch
+FROM golang:1.16.2-stretch
 
 WORKDIR '/app/'
 
-EXPOSE 8000
+COPY go.mod .
+COPY go.sum .
 
-CMD [ "/app/entrypoint.sh" ]
+RUN go mod download
+
+COPY . .
+
+# Build the Go app
+RUN go build -o ./out/main ./cmd/
+
+
+# This container exposes port 8080 to the outside world
+EXPOSE 7755
+
+# Run the binary program produced by `go install`
+CMD ["./out/main"]

@@ -6,15 +6,10 @@
 
 [git]:    https://git-scm.com/
 [golang]: https://golang.org/
-[dlv]:    https://github.com/go-delve/delve
 [modules]: https://github.com/golang/go/wiki/Modules
 [goLand]: https://www.jetbrains.com/go/
 [golint]: https://github.com/golangci/golangci-lint
-[aws-cli]: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
-[aws-cli-config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
-[aws-sam-cli]: https://github.com/awslabs/aws-sam-cli
-[localstack]: https://github.com/localstack/localstack
-
+[docker]: https://www.docker.com/products/docker-desktop
 
 ## ABOUT
 > This repo contains a go module that exposes a User Microservice
@@ -23,33 +18,111 @@
 
 - [Git][git]
 - [Go 1.16][golang]+
-- [golangCI-Lint][golint]
-- [Delve Debugger][dlv]
+- [Docker][docker]
 
-<br>
 
-### [golangCI-Lint][golint]
+### SETUP
+
+> build the userservice docker container
 ```shell
-curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin latest
-```
-<br>
-
-```Shell 
-golangci-lint run
+docker build -t userservice .
 ```
 
-### [Delve Debugger][dlv]
+> run the stack
 ```shell
-GOARCH=amd64 GOOS=linux go build -o ./dlv github.com/go-delve/delve/cmd/dlv
+docker-compose up -d
 ```
 
-### [AWS CLI Configuration][aws-cli-config]
-> Make sure you configure the AWS CLI
-- AWS Access Key ID
-- AWS Secret Access Key
-- Default region 'us-east-1'
-```shell
-aws configure
+## ENDPOINTS
+
+### User/
+<details>
+<summary> Get a user </summary>
+
+*Get a User*
+----
+
+* **URL**
+
+  > localhost:7755/user?id={user-id}
+
+* **Method:**
+  `GET`
+  
+*  **URL Params**
+   **Required:**
+ 
+   id=[string]
+
+* **Success Response:**
+  
+  *Code:* 200 <br />
+  *Content:*
+    ```json
+    {
+        "ID": "steve",
+        "FirstName": "Jack",
+        "LastName": "McGuire",
+        "CountryCode": "GB",
+        "Saved": "2021-04-27T17:03:40+01:00"
+    }
+  ```
+
+OR <br>
+   * *Code:* 200 STATUS OK <br />
+    *Content:* `{}`
+    
+* **Error Responses:**
+
+  * **Code:** 400 BAD REQUEST error <br />
+    **Content:** `error reason`
+    
+    OR
+    
+  * **Code:** 500 internal error <br />
+    **Content:** `error reason`
+
+* **Notes:**
+
+ an empty response of `{}` will be returned if user cannot be found
+ 
+</details>
+
+#### DELETE 
+> DELETE localhost:7755/user?id={user-id}
+
+This endpoint will delete a user from the system
+
+#### POST
+> POST localhost:7755/user
+
+This endpoint updates an existing user<br>
+Note:- The updated user object will be returned
+
+JSON request BODY
+```json
+{
+    "ID": "steve",
+    "FirstName": "Jack",
+    "LastName": "McGuire",
+    "CountryCode": "GB"
+}
+```
+
+#### PUT
+> PUT localhost:7755/user
+ 
+This endpoint creates a new user<br><br>
+note:- 'ID' field is optional, if not provided a userID will be auto-generated
+
+JSON request BODY
+```json
+{
+    "ID": "100249558", -- ID FIELD OPTIONAL
+    "FirstName": "Jack",
+    "LastName": "McGuire",
+    "CountryCode": "GB"
+}
 ```
 
 ## Thanks

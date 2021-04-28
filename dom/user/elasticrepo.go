@@ -1,6 +1,9 @@
 package user
 
-import "github.com/jackmcguire1/UserService/pkg/elasticsearch"
+import (
+	"github.com/apex/log"
+	"github.com/jackmcguire1/UserService/pkg/elasticsearch"
+)
 
 type ElasticSearchRepository struct {
 	BaseRepository
@@ -19,12 +22,32 @@ type ElasticSearchParams struct {
 }
 
 func NewElasticRepo(params *ElasticSearchParams) *ElasticSearchRepository {
-	return &ElasticSearchRepository{
+	es := &ElasticSearchRepository{
 		Host:          params.Host,
 		Port:          params.Port,
 		SecondPort:    params.SecondPort,
 		UserIndexName: params.UserIndexName,
 	}
+
+	client, err := es.getEsClient()
+	if err != nil {
+		log.
+			WithField("elastic-host", params.Host).
+			WithField("elastic-port", params.Port).
+			WithField("elastic-second-port", params.SecondPort).
+			WithError(err).
+			Fatal("failed to init elastic search repo")
+	}
+
+	err = client.CreateIndex()
+	if err != nil {
+		log.
+			WithError(err).
+			WithField("index-name", es.UserIndexName).
+			Fatal("failed to create elastic search repo")
+	}
+
+	return es
 }
 
 func (repo *ElasticSearchRepository) GetUser(userId string) (u *User, err error) {
@@ -48,6 +71,15 @@ func (repo *ElasticSearchRepository) PutUser(u *User) error {
 
 func (repo *ElasticSearchRepository) GetAllUsers(cursor string, limit int) ([]*User, string, error) {
 	return nil, "", NotImplementedErr
+}
+
+func (repo *ElasticSearchRepository) DeleteUser(id string) error {
+	client, err := repo.getEsClient()
+	if err != nil {
+		return err
+	}
+
+	return client.DeleteDoc(id)
 }
 
 func (repo *ElasticSearchRepository) getEsClient() (*elasticsearch.ElasticSearch, error) {

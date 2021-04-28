@@ -34,6 +34,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("missing 'id'  query parameter"))
+
 			return
 		}
 		userId := userParams[0]
@@ -48,6 +49,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte("{}"))
+
 				return
 			}
 
@@ -58,11 +60,13 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
 		w.Write(userResponse)
 		w.WriteHeader(http.StatusOK)
+
 		return
 
 	case http.MethodPost:
@@ -74,6 +78,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
@@ -90,6 +95,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
@@ -116,6 +122,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
@@ -150,6 +157,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
@@ -173,14 +181,85 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+
 			return
 		}
 
 		w.Write(userResponse)
 		w.WriteHeader(http.StatusCreated)
+
+		return
+
+	case http.MethodDelete:
+		type DeleteResponse struct {
+			Deleted bool
+			Message string
+		}
+
+		userParams, ok := r.URL.Query()["id"]
+		if !ok || len(userParams[0]) < 1 {
+			log.
+				WithField("url-values", r.URL.Query()).
+				Error("request does not contain 'id' query parameter")
+
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("missing 'id'  query parameter"))
+
+			return
+		}
+		userId := userParams[0]
+
+		log.
+			WithField("user-id", userId).
+			Info("got user to delete")
+
+		err := h.UserService.DeleteUser(userId)
+		if err != nil {
+
+			if errors.Is(err, utils.ErrNotFound) {
+				log.
+					WithError(err).
+					WithField("user-id", userId).
+					Warn("user does not exist")
+
+				w.Write([]byte(utils.ToJSON(&DeleteResponse{
+					Deleted: false,
+					Message: "user does not exist",
+				})))
+				w.WriteHeader(http.StatusOK)
+
+				return
+			}
+
+			log.
+				WithError(err).
+				WithField("user-id", userId).
+				Error("failed to delete user")
+
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+
+			return
+		}
+
+		log.
+			WithField("user-id", userId).
+			Debug("deleted user successfully")
+
+		w.Write([]byte(utils.ToJSON(&DeleteResponse{
+			Deleted: true,
+			Message: "success",
+		})))
+		w.WriteHeader(http.StatusOK)
 		return
 
 	default:
+		err := fmt.Errorf("unsupported HTTP method")
+		log.
+			WithError(err).
+			WithField("http-method", r.Method).
+			Error("unsupported HTTP method requested")
+
 		w.WriteHeader(http.StatusBadRequest)
 	}
 

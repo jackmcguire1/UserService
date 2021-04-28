@@ -17,3 +17,20 @@ services:
       - "5601:5601"
     links:
       - elasticsearch:elasticsearch
+
+  userservice:
+    image: userservice:latest
+    environment:
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
+      - ELASTIC_SECOND_PORT=9300
+      - ELASTIC_USER_INDEX=users_svc
+      - LISTEN_PORT=7755
+      - LISTEN_HOST=userservice
+      - LOG_VERBOSITY=debug
+    ports:
+      - "7755:7755"
+    links:
+      - elasticsearch:elasticsearch
+    volumes:
+      - ~/dockerdata/elasticsearch:/usr/share/elasticsearch/data/

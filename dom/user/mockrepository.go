@@ -34,3 +34,8 @@ func (repo *MockRepository) GetAllUsers(cursor string, limit int) (users []*User
 
 	return users, args.String(1), args.Error(2)
 }
+
+func (repo *MockRepository) DeleteUser(id string) (error) {
+	args := repo.Called(id)
+	return args.Error(0)
+}

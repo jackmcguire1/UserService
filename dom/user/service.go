@@ -3,6 +3,7 @@ package user
 type UserService interface {
 	GetUser(string) (*User, error)
 	PutUser(*User) (*User, error)
+	DeleteUser(string) error
 	GetUsersByCountry(cc string, cursor string, limit int) ([]*User, string, error)
 }
 
