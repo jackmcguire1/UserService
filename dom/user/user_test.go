@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/jackmcguire1/UserService/pkg/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +32,8 @@ func TestPutUser(t *testing.T) {
 		FirstName:   "John",
 		LastName:    "Doe",
 		CountryCode: "us",
+		Email:       "jack@blah.com",
+		Password:    "123123123",
 	}
 
 	mockRepo := &MockRepository{}
@@ -46,6 +49,23 @@ func TestPutUser(t *testing.T) {
 	assert.NotEmpty(t, user.ID)
 	assert.NotEmpty(t, user.Saved)
 	assert.Equal(t, "US", user.CountryCode)
+}
+
+func TestPutInvalidRequest(t *testing.T) {
+	user := &User{
+		ID:          "100249558",
+		FirstName:   "John",
+		LastName:    "Doe",
+		CountryCode: "asas",
+		Email:       "@b",
+		Password:    "123123123",
+	}
+
+	svc, err := NewService(&Resources{})
+	assert.NoError(t, err)
+
+	user, err = svc.PutUser(user)
+	assert.ErrorIs(t, err, utils.ValidationErr)
 }
 
 func TestDeleteUser(t *testing.T) {

@@ -1,8 +1,9 @@
 package healthcheck
 
 import (
-	"github.com/jackmcguire1/UserService/pkg/utils"
 	"net/http"
+
+	"github.com/jackmcguire1/UserService/pkg/utils"
 )
 
 type HealthCheckHandler struct {

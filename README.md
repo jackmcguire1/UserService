@@ -34,12 +34,39 @@ docker-compose up -d
 ```
 
 
+### Environment Variables
+- EVENTS_URL - external HTTP endpoint provided by interested services
+- LOG_VERBOSITY - warn | error | info | debug
+
+
+## REQUIREMENTS
+The service must allow you to:
+- add a new User
+- modify an existing User
+- remove a User
+- return a list of the Users, allowing for filtering by certain criteria (e.g. all Users with the
+country &quot;UK&quot;)
+
+The service must include:
+- A sensible storage mechanism for the Users
+- The ability to send events to notify other interested services of changes to User entities
+
 ## ASSUMPTIONS
-> Service to be accessed via HTTP
+- Service to be accessed via HTTP
 
-> Small user base, no support pagination requests required
+- Small user base, no support pagination requests required
 
-> Passwords do not have to be encrypted
+- Passwords do not have to be encrypted
+
+- interested services have an exposed HTTP callback endpoint for user events
+
+
+## IMPROVEMENTS
+- Support paginated events for elastic search queries
+
+- Password encryption
+
+- Serve over HTTPS
 
 ## ENDPOINTS
 
@@ -196,7 +223,7 @@ OR <br>
           "LastName": "McGuire",
           "CountryCode": "GB",
           "Email": "jack@blah.com",
-          "Password": "blah",
+          "Password": "blah1",
       }
     ```
    **OPTIONAL:**
@@ -218,7 +245,7 @@ OR <br>
         "CountryCode": "GB",
         "NickName": "crazyjack12",
         "Email": "GB",
-        "Password": "BLAH",
+        "Password": "BLAH1",
         "Saved": "2021-04-27T17:03:40+01:00"
     }
   ```
@@ -287,6 +314,9 @@ OR <br>
         "FirstName": "Jack",
         "LastName": "McGuire",
         "CountryCode": "GB",
+        "NickName": "crazyjack12",
+        "Email": "jack@blah.com",
+        "Password": "blah1",
         "Saved": "2021-04-27T17:03:40+01:00"
     }
   ```
@@ -337,15 +367,18 @@ OR <br>
   *Content:*
     ```json
     {
-    	"Users": [
-    		{
-    			"ID": "100249558",
-    			"FirstName": "Jack",
-    			"LastName": "McGuire",
-    			"CountryCode": "GB",
-    			"Saved": "2021-04-28T13:57:34+01:00"
-    		}
-    	]
+      "Users": [
+    	{
+            "ID": "100249558",
+            "FirstName": "Jack",
+            "LastName": "McGuire",
+            "CountryCode": "GB",
+            "NickName": "crazyjack12",
+            "Email": "jack@blah.com",
+            "Password": "blah1",
+            "Saved": "2021-04-27T17:03:40+01:00"
+    	}
+      ]
     }
   ```
 

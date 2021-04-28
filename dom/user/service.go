@@ -1,7 +1,7 @@
 package user
 
 type UserUpdate struct {
-	User *User
+	User   *User
 	Status string
 }
 
@@ -13,7 +13,7 @@ type UserService interface {
 }
 
 type Resources struct {
-	Repo Repository
+	Repo        Repository
 	UserChannel chan *UserUpdate
 }
 

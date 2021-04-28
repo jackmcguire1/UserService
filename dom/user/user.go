@@ -95,9 +95,11 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		return nil, err
 	}
 
-	svc.UserChannel <- &UserUpdate{
-		User:   u,
-		Status: "UPDATE",
+	if svc.UserChannel != nil {
+		svc.UserChannel <- &UserUpdate{
+			User:   u,
+			Status: "UPDATE",
+		}
 	}
 
 	return u, err
@@ -109,9 +111,11 @@ func (svc *service) DeleteUser(id string) error {
 		return err
 	}
 
-	svc.UserChannel <- &UserUpdate{
-		User:   &User{ID: id},
-		Status: "DELETED",
+	if svc.UserChannel != nil {
+		svc.UserChannel <- &UserUpdate{
+			User:   &User{ID: id},
+			Status: "DELETED",
+		}
 	}
 
 	return err
