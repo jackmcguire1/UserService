@@ -62,6 +62,16 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		logEntry.Debug("generated new uuid for user")
 	}
 
+	if u.CountryCode == "" || len(u.CountryCode) != 2 {
+		return nil, fmt.Errorf("please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
+	}
+	if u.FirstName == "" {
+		return nil, fmt.Errorf("%w - please enter a valid first name", utils.ValidationErr)
+	}
+	if u.LastName == "" {
+		return nil, fmt.Errorf("%w - please enter a valid last name", utils.ValidationErr)
+	}
+
 	u.Saved = time.Now().Format(time.RFC3339)
 
 	logEntry.Debug("saving user to repository")

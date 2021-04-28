@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apex/log"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 	"github.com/olivere/elastic"
 )
@@ -74,7 +73,6 @@ func (es *ElasticSearch) GetDoc(docID string, v interface{}) (err error) {
 		err = fmt.Errorf("source is invalid")
 		return
 	}
-	log.WithField("raw-data", string(*result.Source)).Info("es doc")
 
 	err = json.Unmarshal(*result.Source, &v)
 
@@ -88,6 +86,7 @@ func (es *ElasticSearch) DeleteDoc(docID string) (err error) {
 	if docID != "" {
 		idx = idx.Id(docID)
 	}
+
 	result, err := idx.Do(ctx)
 	if err != nil {
 		var elasticErr *elastic.Error

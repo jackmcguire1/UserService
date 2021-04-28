@@ -115,6 +115,18 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		userResponse, err := h.UpdateUser(user)
 		if err != nil {
+			if errors.Is(err, utils.ValidationErr) {
+				log.
+					WithError(err).
+					WithField("user", user).
+					Error("failed to update user")
+
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+
+				return
+			}
+
 			log.
 				WithError(err).
 				WithField("user", user).
@@ -163,6 +175,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		userResponse, err := h.createUser(user)
 		if err != nil {
+
 			if errors.Is(err, utils.AlreadyExists) {
 				log.
 					WithError(err).
@@ -171,6 +184,18 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 				w.Write([]byte("user already exists"))
 				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			if errors.Is(err, utils.ValidationErr) {
+				log.
+					WithError(err).
+					WithField("user", user).
+					Error("failed to update user")
+
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+
 				return
 			}
 

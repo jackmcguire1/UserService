@@ -26,6 +26,14 @@ var (
 )
 
 func init() {
+	logLevel := os.Getenv("LOG_VERBOSITY")
+	switch logLevel {
+	case "":
+		logLevel = "info"
+	default:
+		log.SetLevelFromString(logLevel)
+	}
+
 	elasticSearchHost = os.Getenv("ELASTIC_HOST")
 	elasticSearchPort = os.Getenv("ELASTIC_PORT")
 	elasticSearchSecondPort = os.Getenv("ELASTIC_SECOND_PORT")

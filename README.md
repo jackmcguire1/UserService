@@ -37,7 +37,7 @@ docker-compose up -d
 
 ### User/
 <details>
-<summary> Get a user </summary>
+<summary>Get a user </summary>
 
 *Get a User*
 ----
@@ -79,7 +79,7 @@ OR <br>
     
     OR
     
-  * **Code:** 500 internal error <br />
+  * **Code:** 500 INTERNAL SERVER ERROR <br />
     **Content:** `error reason`
 
 * **Notes:**
@@ -88,42 +88,168 @@ OR <br>
  
 </details>
 
-#### DELETE 
-> DELETE localhost:7755/user?id={user-id}
+<details>
+<summary>Delete a user </summary>
 
-This endpoint will delete a user from the system
+*Delete a User*
+----
 
-#### POST
-> POST localhost:7755/user
+* **URL**
 
-This endpoint updates an existing user<br>
-Note:- The updated user object will be returned
+  > localhost:7755/user?id={user-id}
 
-JSON request BODY
-```json
-{
-    "ID": "steve",
-    "FirstName": "Jack",
-    "LastName": "McGuire",
-    "CountryCode": "GB"
-}
-```
-
-#### PUT
-> PUT localhost:7755/user
+* **Method:**
+  `DELETE`
+  
+*  **URL Params**
+   **Required:**
  
-This endpoint creates a new user<br><br>
-note:- 'ID' field is optional, if not provided a userID will be auto-generated
+   id=[string]
 
-JSON request BODY
-```json
-{
-    "ID": "100249558", -- ID FIELD OPTIONAL
-    "FirstName": "Jack",
-    "LastName": "McGuire",
-    "CountryCode": "GB"
-}
-```
+* **Success Response:**
+  
+  *Code:* 200 <br />
+  *Content:*
+    ```json
+    {
+        "Delete": true,
+        "Message": "success"
+    }
+  ```
+    
+* **Error Responses:**
+
+  *  *Code:* 200 <br />
+      *Content:*
+        ```json
+        {
+            "Delete": false,
+            "Message": "error info"
+        }
+      ```
+    
+    OR
+    
+  * **Code:** 500 INTERNAL SERVER ERROR <br />
+    **Content:** `error reason`
+
+</details>
+
+<details>
+<summary>Update a user </summary>
+
+*Update a User*
+----
+
+* **URL**
+
+  > localhost:7755/user
+
+* **Method:**
+  `POST`
+  
+* **Data Params**
+   **Required:**
+ 
+   ```
+      {
+        "ID": "100249558",
+        "FirstName": "Jack",
+        "LastName": "McGuire",
+        "CountryCode": "GB",
+      }
+    ```
+
+* **Success Response:**
+  
+  *Code:* 200 STATUS OK<br />
+  *Content:*
+   ```json
+    {
+        "ID": "steve",
+        "FirstName": "Jack",
+        "LastName": "McGuire",
+        "CountryCode": "GB",
+        "Saved": "2021-04-27T17:03:40+01:00"
+    }
+  ```
+    
+* **Error Responses:**
+
+  *  *Code:* 400 BAD REQUEST <br />
+      *Content:* `error reason`
+    
+    OR
+    
+  * **Code:** 500 INTERNAL SERVER ERROR <br />
+    **Content:** `error reason`
+
+* **Notes:**
+
+Country Code value must be a valid ISO Alpha-2 value
+</details>
+
+
+<details>
+<summary>Create a user </summary>
+
+*Create a User*
+----
+
+* **URL**
+
+  > localhost:7755/user
+
+* **Method:**
+  `PUT`
+  
+* **Data Params**
+   **Required:**
+ 
+   ```
+   {
+        "FirstName": "Jack",
+        "LastName": "McGuire",
+        "CountryCode": "GB",
+  }
+    ```
+  
+  **OPTIONAL:**
+  ```
+    {
+        "ID": "100249558",
+    }
+  ```
+
+* **Success Response:**
+  
+  *Code:* 200 STATUS OK<br />
+  *Content:*
+    ```json
+    {
+        "ID": "100249558",
+        "FirstName": "Jack",
+        "LastName": "McGuire",
+        "CountryCode": "GB",
+        "Saved": "2021-04-27T17:03:40+01:00"
+    }
+  ```
+    
+* **Error Responses:**
+
+  *  *Code:* 400 BAD REQUEST <br />
+      *Content:* `error reason`
+    
+    OR
+    
+  * **Code:** 500 INTERNAL SERVER ERROR <br />
+    **Content:** `error reason`
+
+* **Notes:**
+
+the field 'ID' is optional
+
+</details>
 
 ## Thanks
 

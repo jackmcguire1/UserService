@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+
 	"github.com/apex/log"
 	"github.com/jackmcguire1/UserService/pkg/elasticsearch"
 	"github.com/jackmcguire1/UserService/pkg/utils"
@@ -104,10 +105,6 @@ func (repo *ElasticSearchRepository) PutUser(u *User) error {
 	}
 
 	return es.PutDoc(u.ID, u)
-}
-
-func (repo *ElasticSearchRepository) GetAllUsers(cursor string, limit int) ([]*User, string, error) {
-	return nil, "", NotImplementedErr
 }
 
 func (repo *ElasticSearchRepository) DeleteUser(id string) error {

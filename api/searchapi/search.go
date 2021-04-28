@@ -19,7 +19,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ccParams, ok := r.URL.Query()["cc"]
-	if !ok || len(ccParams[0]) < 1 {
+	if !ok || len(ccParams[0]) < 2 {
 		log.
 			WithField("values", r.URL.Query()).
 			Error("request does not contain 'cc' query parameter")
