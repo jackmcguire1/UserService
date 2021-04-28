@@ -81,36 +81,26 @@ func (svc *service) DeleteUser(id string) error {
 	return svc.Repo.DeleteUser(id)
 }
 
-func (svc *service) GetUsersByCountry(countryCode string, cursor string, limit int) ([]*User, string, error) {
+func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
 	logEntry := log.
 		WithField("country-code", countryCode)
 
 	logEntry.
-		WithField("cursor", cursor).
-		WithField("limit", limit).
 		Info("call GetUsersByCountry")
 
 	logEntry.Debug("querying get all users")
-	users, bookmark, err := svc.Repo.GetAllUsers(cursor, limit)
+	users, err := svc.Repo.GetUsersByCountry(countryCode)
 	if err != nil {
 		logEntry.
 			WithError(err).
 			Error("failed to get all users from repository")
 
-		return nil, "", err
+		return nil, err
 	}
 
 	logEntry.
 		WithField("user-batch", utils.ToJSON(users)).
-		WithField("len-users", len(users)).
 		Debug("got users from repository")
 
-	usersByCountry := []*User{}
-	for _, user := range users {
-		if user.CountryCode == countryCode {
-			usersByCountry = append(usersByCountry, user)
-		}
-	}
-
-	return usersByCountry, bookmark, nil
+	return users, nil
 }

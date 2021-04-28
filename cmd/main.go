@@ -2,23 +2,24 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
-	apex "github.com/apex/log"
-	"github.com/jackmcguire1/UserService/api"
+	"github.com/apex/log"
+	"github.com/jackmcguire1/UserService/api/searchapi"
+	"github.com/jackmcguire1/UserService/api/userapi"
 	"github.com/jackmcguire1/UserService/dom/user"
 )
 
 var (
-	userService user.UserService
-	userHandler *api.UserHandler
+	userService   user.UserService
+	userHandler   *userapi.UserHandler
+	searchHandler *searchapi.SearchHandler
 
 	elasticSearchHost       string
 	elasticSearchPort       string
 	elasticSearchSecondPort string
-	elasticSearchUserIndex string
+	elasticSearchUserIndex  string
 
 	listenPort string
 	listenHost string
@@ -42,26 +43,28 @@ func init() {
 		}),
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("failed to init user service")
 	}
 
-	userHandler = &api.UserHandler{UserService: userService}
+	userHandler = &userapi.UserHandler{UserService: userService}
+	searchHandler = &searchapi.SearchHandler{UserService: userService}
 }
 
 func main() {
 	s := http.NewServeMux()
 
 	s.Handle("/user", userHandler)
+	s.HandleFunc("/search/users/by_country", searchHandler.UsersByCountry)
 
 	addr := fmt.Sprintf("%s:%s", listenHost, listenPort)
 
-	apex.
+	log.
 		WithField("listen-address", addr).
 		Info("listening")
 
 	err := http.ListenAndServe(addr, s)
 	if err != nil {
-		apex.
+		log.
 			WithError(err).
 			Fatal("failed to listen and serve")
 	}

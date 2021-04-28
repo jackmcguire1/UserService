@@ -107,6 +107,18 @@ func (es *ElasticSearch) DeleteDoc(docID string) (err error) {
 	return
 }
 
+func (es *ElasticSearch) Query(query elastic.Query) ([]*elastic.SearchHit, error) {
+	ctx := context.Background()
+	idx := es.client.Search(es.Name).Query(query)
+
+	res, err := idx.Do(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Hits.Hits, nil
+}
+
 func (es *ElasticSearch) DeleteIndex() (err error) {
 	ctx := context.Background()
 	_, err = es.client.DeleteIndex(es.Name).Do(ctx)

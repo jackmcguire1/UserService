@@ -1,8 +1,11 @@
 package user
 
 import (
+	"encoding/json"
 	"github.com/apex/log"
 	"github.com/jackmcguire1/UserService/pkg/elasticsearch"
+	"github.com/jackmcguire1/UserService/pkg/utils"
+	"github.com/olivere/elastic/v7"
 )
 
 type ElasticSearchRepository struct {
@@ -58,6 +61,40 @@ func (repo *ElasticSearchRepository) GetUser(userId string) (u *User, err error)
 
 	err = es.GetDoc(userId, &u)
 	return
+}
+
+func (repo *ElasticSearchRepository) GetUsersByCountry(cc string) (users []*User, err error) {
+	es, err := repo.getEsClient()
+	if err != nil {
+		return nil, err
+	}
+
+	q := elastic.NewMatchQuery("CountryCode", cc)
+	res, err := es.Query(q)
+	if err != nil {
+		return
+	}
+
+	users = []*User{}
+	for _, hit := range res {
+		if hit.Source == nil {
+			log.
+				WithField("hit", utils.ToJSON(hit)).
+				Error("document does not have source")
+
+			continue
+		}
+
+		var user *User
+		err = json.Unmarshal(*hit.Source, &user)
+		if err != nil {
+			return
+		}
+
+		users = append(users, user)
+	}
+
+	return users, err
 }
 
 func (repo *ElasticSearchRepository) PutUser(u *User) error {

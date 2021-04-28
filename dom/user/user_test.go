@@ -47,7 +47,6 @@ func TestPutUser(t *testing.T) {
 	assert.NotEmpty(t, user.Saved)
 }
 
-
 func TestDeleteUser(t *testing.T) {
 	mockRepo := &MockRepository{}
 
@@ -64,19 +63,9 @@ func TestDeleteUser(t *testing.T) {
 func TestGetUsersByCountry(t *testing.T) {
 	users := []*User{
 		&User{
-			FirstName:   "John",
-			LastName:    "Doe",
-			CountryCode: "US",
-		},
-		&User{
 			FirstName:   "Bob",
 			LastName:    "Ballmer",
 			CountryCode: "GB",
-		},
-		&User{
-			FirstName:   "Alex",
-			LastName:    "The",
-			CountryCode: "US",
 		},
 		&User{
 			FirstName:   "Garry",
@@ -87,14 +76,15 @@ func TestGetUsersByCountry(t *testing.T) {
 
 	mockRepo := &MockRepository{}
 
-	mockRepo.On("GetAllUsers", "", 100).Return(users, "", nil)
+	mockRepo.On("GetUsersByCountry", "GB").Return(users, nil)
 
 	svc, err := NewService(&Resources{
 		Repo: mockRepo,
 	})
 	assert.NoError(t, err)
 
-	resp, _, err := svc.GetUsersByCountry("GB", "", 100)
+	resp, err := svc.GetUsersByCountry("GB")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp)
+	assert.Len(t, resp, 2)
 }

@@ -1,4 +1,4 @@
-package api
+package userapi
 
 import (
 	"encoding/json"
