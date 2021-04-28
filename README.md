@@ -33,7 +33,42 @@ docker build -t userservice .
 docker-compose up -d
 ```
 
+
+## ASSUMPTIONS
+> Service to be accessed via HTTP
+
+> Small user base, no support pagination requests required
+
+> Passwords do not have to be encrypted
+
 ## ENDPOINTS
+
+### Healthcheck/
+
+<details>
+<summary>Healthcheck</summary>
+
+*By Country*
+----
+
+* **URL**
+
+  > localhost:7755/healthcheck
+
+* **Method:**
+  `GET`
+
+* **Success Response:**
+  
+  *Code:* 200 <br />
+  *Content:*
+    ```json
+    {
+      "LogVerbosity": "info"
+    }
+  ```
+</details>
+
 
 ### User/
 <details>
@@ -60,10 +95,13 @@ docker-compose up -d
   *Content:*
     ```json
     {
-        "ID": "steve",
+        "ID": "100249558",
         "FirstName": "Jack",
         "LastName": "McGuire",
         "CountryCode": "GB",
+        "NickName": "crazyjack12",
+        "Email": "jack@blah.com",
+        "Password": "blah",
         "Saved": "2021-04-27T17:03:40+01:00"
     }
   ```
@@ -153,10 +191,18 @@ OR <br>
  
    ```
       {
-        "ID": "100249558",
-        "FirstName": "Jack",
-        "LastName": "McGuire",
-        "CountryCode": "GB",
+          "ID": "100249558",
+          "FirstName": "Jack",
+          "LastName": "McGuire",
+          "CountryCode": "GB",
+          "Email": "jack@blah.com",
+          "Password": "blah",
+      }
+    ```
+   **OPTIONAL:**
+    ```
+      {
+          "NickName": "crazyjack12",
       }
     ```
 
@@ -166,10 +212,13 @@ OR <br>
   *Content:*
    ```json
     {
-        "ID": "steve",
+        "ID": "100249558",
         "FirstName": "Jack",
         "LastName": "McGuire",
         "CountryCode": "GB",
+        "NickName": "crazyjack12",
+        "Email": "GB",
+        "Password": "BLAH",
         "Saved": "2021-04-27T17:03:40+01:00"
     }
   ```
@@ -186,7 +235,11 @@ OR <br>
 
 * **Notes:**
 
-Country Code value must be a valid ISO Alpha-2 value
+> emails must contain '@'
+
+> passwords must be more than 5 chars long
+
+> country code must be ISO ALPHA-2
 </details>
 
 
@@ -208,16 +261,19 @@ Country Code value must be a valid ISO Alpha-2 value
  
    ```
    {
-        "FirstName": "Jack",
-        "LastName": "McGuire",
-        "CountryCode": "GB",
-  }
+           "FirstName": "Jack",
+           "LastName": "McGuire",
+           "CountryCode": "GB",
+           "Email": "GB",
+           "Password": "GB",
+       }
     ```
   
   **OPTIONAL:**
   ```
     {
         "ID": "100249558",
+        "NickName": "100249558",
     }
   ```
 
@@ -247,8 +303,75 @@ Country Code value must be a valid ISO Alpha-2 value
 
 * **Notes:**
 
-the field 'ID' is optional
+> the field 'ID' is optional
 
+> emails must contain '@'
+
+> passwords must be more than 5 chars long
+
+> country code must be ISO ALPHA-2
+</details>
+
+### Search/Users/
+<details>
+<summary>By Country</summary>
+
+*By Country*
+----
+
+* **URL**
+
+  > localhost:7755/search/users/by_country?cc={country-code}
+
+* **Method:**
+  `GET`
+  
+*  **URL Params**
+   **Required:**
+ 
+   cc=[string]
+
+* **Success Response:**
+  
+  *Code:* 200 <br />
+  *Content:*
+    ```json
+    {
+    	"Users": [
+    		{
+    			"ID": "100249558",
+    			"FirstName": "Jack",
+    			"LastName": "McGuire",
+    			"CountryCode": "GB",
+    			"Saved": "2021-04-28T13:57:34+01:00"
+    		}
+    	]
+    }
+  ```
+
+OR <br>
+   * *Code:* 200 STATUS OK <br />
+    *Content:*
+    ```
+    {
+        "Users": []
+    }
+    ```
+
+* **Error Responses:**
+
+  * **Code:** 400 BAD REQUEST error <br />
+    **Content:** `error reason`
+    
+    OR
+    
+  * **Code:** 500 INTERNAL SERVER ERROR <br />
+    **Content:** `error reason`
+
+* **Notes:**
+
+'cc' query parameter will auto be defaulted into uppercase
+ 
 </details>
 
 ## Thanks

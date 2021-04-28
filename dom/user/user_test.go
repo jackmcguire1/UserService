@@ -30,7 +30,7 @@ func TestPutUser(t *testing.T) {
 	user := &User{
 		FirstName:   "John",
 		LastName:    "Doe",
-		CountryCode: "US",
+		CountryCode: "us",
 	}
 
 	mockRepo := &MockRepository{}
@@ -45,6 +45,7 @@ func TestPutUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, user.ID)
 	assert.NotEmpty(t, user.Saved)
+	assert.Equal(t, "US", user.CountryCode)
 }
 
 func TestDeleteUser(t *testing.T) {

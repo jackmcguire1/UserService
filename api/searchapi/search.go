@@ -18,8 +18,10 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 		Users []*user.User
 	}
 
+	w.Header().Add("Content-Type", "application/json")
+
 	ccParams, ok := r.URL.Query()["cc"]
-	if !ok || len(ccParams[0]) < 2 {
+	if !ok || len(ccParams[0]) < 1 {
 		log.
 			WithField("values", r.URL.Query()).
 			Error("request does not contain 'cc' query parameter")
@@ -29,7 +31,18 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
 	countryCode := strings.ToUpper(ccParams[0])
+	if len(countryCode) != 2 {
+		log.
+			WithField("country-code", countryCode).
+			Error("request does not contain valid 'cc' query parameter")
+
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("invalid 'cc'  query parameter - must be ISO ALPHA-2"))
+
+		return
+	}
 
 	log.
 		WithField("country-code", countryCode).
@@ -44,6 +57,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+
 		return
 	}
 
@@ -51,4 +65,6 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(data)
 	w.WriteHeader(http.StatusOK)
+
+	return
 }

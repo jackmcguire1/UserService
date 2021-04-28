@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/jackmcguire1/UserService/api/healthcheck"
 	"net/http"
 	"os"
 
@@ -12,9 +13,10 @@ import (
 )
 
 var (
-	userService   user.UserService
-	userHandler   *userapi.UserHandler
-	searchHandler *searchapi.SearchHandler
+	userService        user.UserService
+	userHandler        *userapi.UserHandler
+	searchHandler      *searchapi.SearchHandler
+	healthCheckHandler *healthcheck.HealthCheckHandler
 
 	elasticSearchHost       string
 	elasticSearchPort       string
@@ -56,6 +58,7 @@ func init() {
 
 	userHandler = &userapi.UserHandler{UserService: userService}
 	searchHandler = &searchapi.SearchHandler{UserService: userService}
+	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: logLevel}
 }
 
 func main() {
@@ -63,6 +66,7 @@ func main() {
 
 	s.Handle("/user", userHandler)
 	s.HandleFunc("/search/users/by_country", searchHandler.UsersByCountry)
+	s.Handle("/healthcheck", healthCheckHandler)
 
 	addr := fmt.Sprintf("%s:%s", listenHost, listenPort)
 
@@ -70,6 +74,9 @@ func main() {
 		WithField("listen-address", addr).
 		Info("listening")
 
+	go func () {
+
+	}
 	err := http.ListenAndServe(addr, s)
 	if err != nil {
 		log.

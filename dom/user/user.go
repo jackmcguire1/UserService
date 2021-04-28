@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/apex/log"
@@ -13,6 +14,9 @@ type User struct {
 	ID          string
 	FirstName   string
 	LastName    string
+	Password    string
+	Email       string
+	NickName    string
 	CountryCode string
 	Saved       string
 }
@@ -63,7 +67,7 @@ func (svc *service) PutUser(u *User) (*User, error) {
 	}
 
 	if u.CountryCode == "" || len(u.CountryCode) != 2 {
-		return nil, fmt.Errorf("please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
+		return nil, fmt.Errorf("%w - please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
 	}
 	if u.FirstName == "" {
 		return nil, fmt.Errorf("%w - please enter a valid first name", utils.ValidationErr)
@@ -71,8 +75,15 @@ func (svc *service) PutUser(u *User) (*User, error) {
 	if u.LastName == "" {
 		return nil, fmt.Errorf("%w - please enter a valid last name", utils.ValidationErr)
 	}
+	if u.Email == "" || !strings.Contains(u.Email, "@") {
+		return nil, fmt.Errorf("%w - please enter a valid email", utils.ValidationErr)
+	}
+	if u.Password == "" || len(u.Password) < 5 {
+		return nil, fmt.Errorf("%w - please enter a password, with upto 5 characters", utils.ValidationErr)
+	}
 
 	u.Saved = time.Now().Format(time.RFC3339)
+	u.CountryCode = strings.ToUpper(u.CountryCode)
 
 	logEntry.Debug("saving user to repository")
 	err := svc.Repo.PutUser(u)
@@ -84,11 +95,26 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		return nil, err
 	}
 
+	svc.UserChannel <- &UserUpdate{
+		User:   u,
+		Status: "UPDATE",
+	}
+
 	return u, err
 }
 
 func (svc *service) DeleteUser(id string) error {
-	return svc.Repo.DeleteUser(id)
+	err := svc.Repo.DeleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	svc.UserChannel <- &UserUpdate{
+		User:   &User{ID: id},
+		Status: "DELETED",
+	}
+
+	return err
 }
 
 func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
