@@ -37,6 +37,7 @@ func init() {
 	switch logLevel {
 	case "":
 		logLevel = "info"
+		fallthrough
 	default:
 		log.SetLevelFromString(logLevel)
 	}

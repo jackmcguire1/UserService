@@ -12,12 +12,6 @@ type ElasticSearch struct {
 	client  *elastic.Client
 }
 
-type ElasticSearchClient struct {
-	Name    string
-	Mapping map[string]interface{}
-	client  *elastic.Client
-}
-
 type ElasticSearchClientReq struct {
 	Host          string
 	Port          string
