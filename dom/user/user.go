@@ -66,20 +66,8 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		logEntry.Debug("generated new uuid for user")
 	}
 
-	if u.CountryCode == "" || len(u.CountryCode) != 2 {
-		return nil, fmt.Errorf("%w - please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
-	}
-	if u.FirstName == "" {
-		return nil, fmt.Errorf("%w - please enter a valid first name", utils.ValidationErr)
-	}
-	if u.LastName == "" {
-		return nil, fmt.Errorf("%w - please enter a valid last name", utils.ValidationErr)
-	}
-	if u.Email == "" || !strings.Contains(u.Email, "@") {
-		return nil, fmt.Errorf("%w - please enter a valid email", utils.ValidationErr)
-	}
-	if u.Password == "" || len(u.Password) < 5 {
-		return nil, fmt.Errorf("%w - please enter a password, with upto 5 characters", utils.ValidationErr)
+	if err := u.Validate(); err != nil {
+		return nil, err
 	}
 
 	u.Saved = time.Now().Format(time.RFC3339)
@@ -143,4 +131,25 @@ func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
 		Debug("got users from repository")
 
 	return users, nil
+}
+
+func (u *User) Validate() error {
+
+	if u.CountryCode == "" || len(u.CountryCode) != 2 {
+		return fmt.Errorf("%w - please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
+	}
+	if u.FirstName == "" {
+		return fmt.Errorf("%w - please enter a valid first name", utils.ValidationErr)
+	}
+	if u.LastName == "" {
+		return fmt.Errorf("%w - please enter a valid last name", utils.ValidationErr)
+	}
+	if u.Email == "" || !strings.Contains(u.Email, "@") {
+		return fmt.Errorf("%w - please enter a valid email", utils.ValidationErr)
+	}
+	if u.Password == "" || len(u.Password) < 5 {
+		return fmt.Errorf("%w - please enter a password, with upto 5 characters", utils.ValidationErr)
+	}
+
+	return nil
 }
