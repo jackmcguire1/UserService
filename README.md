@@ -75,7 +75,7 @@ The service must include:
 <details>
 <summary>Healthcheck</summary>
 
-*By Country*
+*Healthcheck*
 ----
 
 * **URL**
