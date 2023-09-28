@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/jackmcguire1/UserService/api/healthcheck"
@@ -20,10 +22,9 @@ var (
 	searchHandler      *searchapi.SearchHandler
 	healthCheckHandler *healthcheck.HealthCheckHandler
 
-	elasticSearchHost       string
-	elasticSearchPort       string
-	elasticSearchSecondPort string
-	elasticSearchUserIndex  string
+	mongoHost            string
+	mongoDatabase        string
+	mongoUsersCollection string
 
 	listenPort string
 	listenHost string
@@ -42,10 +43,9 @@ func init() {
 		log.SetLevelFromString(logLevel)
 	}
 
-	elasticSearchHost = os.Getenv("ELASTIC_HOST")
-	elasticSearchPort = os.Getenv("ELASTIC_PORT")
-	elasticSearchSecondPort = os.Getenv("ELASTIC_SECOND_PORT")
-	elasticSearchUserIndex = os.Getenv("ELASTIC_USER_INDEX")
+	mongoHost = os.Getenv("MONGO_HOST")
+	mongoDatabase = os.Getenv("MONGO_DATABASE")
+	mongoUsersCollection = os.Getenv("MONGO_USERS_COLLECTION")
 
 	listenPort = os.Getenv("LISTEN_PORT")
 	listenHost = os.Getenv("LISTEN_HOST")
@@ -54,29 +54,39 @@ func init() {
 	eventsURL = os.Getenv("EVENTS_URL")
 
 	var err error
-	userService, err = user.NewService(&user.Resources{
-		UserChannel: userUpdates,
-		Repo: user.NewElasticRepo(&user.ElasticSearchParams{
-			Host:          elasticSearchHost,
-			Port:          elasticSearchPort,
-			SecondPort:    elasticSearchPort,
-			UserIndexName: elasticSearchUserIndex,
-		}),
+
+	userMongoRepo, err := user.NewMongoRepo(context.Background(), &user.MongoRepoParams{
+		Host:           mongoHost,
+		Database:       mongoDatabase,
+		CollectionName: mongoUsersCollection,
 	})
 	if err != nil {
-		log.WithError(err).Fatal("failed to init user service")
+		log.
+			WithError(err).
+			Fatal("failed to init user mongo repo")
+	}
+
+	userService, err = user.NewService(&user.Resources{
+		UserChannel: userUpdates,
+		Repo:        userMongoRepo,
+	})
+	if err != nil {
+		log.
+			WithError(err).
+			Fatal("failed to init user service")
 	}
 
 	userHandler = &userapi.UserHandler{UserService: userService}
 	searchHandler = &searchapi.SearchHandler{UserService: userService}
-	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: logLevel}
+	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: logLevel, StartTime: time.Now().UTC()}
 }
 
 func main() {
 	s := http.NewServeMux()
 
-	s.Handle("/user", userHandler)
+	s.Handle("/users", userHandler)
 	s.HandleFunc("/search/users/by_country", searchHandler.UsersByCountry)
+	s.HandleFunc("/search/users/", searchHandler.GetAllUsers)
 	s.Handle("/healthcheck", healthCheckHandler)
 
 	addr := fmt.Sprintf("%s:%s", listenHost, listenPort)

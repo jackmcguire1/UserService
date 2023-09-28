@@ -11,14 +11,13 @@ import (
 )
 
 type User struct {
-	ID          string
-	FirstName   string
-	LastName    string
-	Password    string
-	Email       string
-	NickName    string
-	CountryCode string
-	Saved       string
+	ID          string `json:"_id" bson:"_id"`
+	FirstName   string `json:"firstName" bson:"firstName"`
+	LastName    string `json:"lastName" bson:"lastName"`
+	Email       string `json:"email" bson:"email"`
+	NickName    string `json:"nickName" bson:"nickName"`
+	CountryCode string `json:"countryCode" bson:"countryCode"`
+	Saved       string `json:"saved" bson:"saved"`
 }
 
 func (svc *service) GetUser(userID string) (*User, error) {
@@ -121,7 +120,7 @@ func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
 	if err != nil {
 		logEntry.
 			WithError(err).
-			Error("failed to get all users from repository")
+			Error("failed to get all users from repository by country")
 
 		return nil, err
 	}
@@ -131,6 +130,24 @@ func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
 		Debug("got users from repository")
 
 	return users, nil
+}
+
+func (svc *service) GetAllUsers() ([]*User, error) {
+	log.
+		Info("call GetAllUsers")
+
+	users, err := svc.Repo.GetAllUsers()
+	if err != nil {
+		log.
+			WithError(err).
+			Error("failed to get all users from repository")
+	}
+
+	log.
+		WithField("user-batch", utils.ToJSON(users)).
+		Debug("got all users from repository")
+
+	return users, err
 }
 
 func (u *User) Validate() error {
@@ -146,9 +163,6 @@ func (u *User) Validate() error {
 	}
 	if u.Email == "" || !strings.Contains(u.Email, "@") {
 		return fmt.Errorf("%w - please enter a valid email", utils.ValidationErr)
-	}
-	if u.Password == "" || len(u.Password) < 5 {
-		return fmt.Errorf("%w - please enter a password, with upto 5 characters", utils.ValidationErr)
 	}
 
 	return nil

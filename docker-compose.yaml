@@ -1,28 +1,19 @@
 version: "3.3"
 
 services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
-    environment:
-      - discovery.type=single-node
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-
   userservice:
+    build:
+      context: .
+      args:
+        - BIN_FOLDER=mongo
     image: userservice:latest
     environment:
-      - ELASTIC_HOST=elasticsearch
-      - ELASTIC_PORT=9200
-      - ELASTIC_SECOND_PORT=9300
-      - ELASTIC_USER_INDEX=users_svc
+      - MONGO_HOST=mongodb+srv://****
+      - MONGO_DATABASE=****
+      - MONGO_USERS_COLLECTION=users
       - LISTEN_PORT=7755
       - LISTEN_HOST=userservice
       - LOG_VERBOSITY=debug
       - EVENTS_URL=
     ports:
       - "7755:7755"
-    links:
-      - elasticsearch:elasticsearch
-    volumes:
-      - ~/dockerdata/elasticsearch:/usr/share/elasticsearch/data/

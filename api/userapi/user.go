@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/apex/log"
+	"github.com/jackmcguire1/UserService/api"
 	"github.com/jackmcguire1/UserService/dom/user"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
@@ -33,7 +34,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("request does not contain 'id' query parameter")
 
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("missing 'id'  query parameter"))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: "missing 'id'  query parameter"}))
 
 			return
 		}
@@ -48,7 +49,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					Warn("user does not exist ")
 
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("{}"))
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user not found"}))
 
 				return
 			}
@@ -59,7 +60,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to get user")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -77,7 +78,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to get read data from request body")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -108,7 +109,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to update user")
 
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("missing user id"))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -122,7 +123,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					Error("failed to update user")
 
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 				return
 			}
@@ -133,7 +134,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to update user")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -150,7 +151,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to get read data from request body")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -168,21 +169,20 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to unmarshal user data from request body")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
 
 		userResponse, err := h.createUser(user)
 		if err != nil {
-
 			if errors.Is(err, utils.AlreadyExists) {
 				log.
 					WithError(err).
 					WithField("user", user).
 					Warn("failed to create user")
 
-				w.Write([]byte("user already exists"))
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user already exists"}))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -194,7 +194,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					Error("failed to update user")
 
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 				return
 			}
@@ -205,7 +205,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to create user")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -217,8 +217,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodDelete:
 		type DeleteResponse struct {
-			Deleted bool
-			Message string
+			Deleted bool   `json:"deleted"`
+			Message string `json:"message"`
 		}
 
 		userParams, ok := r.URL.Query()["id"]
@@ -228,7 +228,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("request does not contain 'id' query parameter")
 
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("missing 'id'  query parameter"))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: "missing 'id'  query parameter"}))
 
 			return
 		}
@@ -247,11 +247,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					WithField("user-id", userId).
 					Warn("user does not exist")
 
-				w.Write([]byte(utils.ToJSON(&DeleteResponse{
-					Deleted: false,
-					Message: "user does not exist",
-				})))
-				w.WriteHeader(http.StatusOK)
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user does not exist"}))
+				w.WriteHeader(http.StatusBadRequest)
 
 				return
 			}
@@ -262,7 +259,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Error("failed to delete user")
 
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
 		}
@@ -271,10 +268,10 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			WithField("user-id", userId).
 			Debug("deleted user successfully")
 
-		w.Write([]byte(utils.ToJSON(&DeleteResponse{
+		w.Write(utils.ToRAWJSON(&DeleteResponse{
 			Deleted: true,
 			Message: "success",
-		})))
+		}))
 		w.WriteHeader(http.StatusOK)
 		return
 
@@ -286,6 +283,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Error("unsupported HTTP method requested")
 
 		w.WriteHeader(http.StatusBadRequest)
+		utils.ToRAWJSON(api.HTTPError{Error: "unsupported HTTP METHOD"})
 	}
 
 	return
@@ -314,7 +312,7 @@ func (h *UserHandler) getUser(userId string) ([]byte, error) {
 
 func (h *UserHandler) UpdateUser(usr *user.User) ([]byte, error) {
 	logEntry := log.WithField("user", usr)
-	logEntry.Info("call putUser - API")
+	logEntry.Info("call UpdateUser - API")
 
 	usr, err := h.UserService.PutUser(usr)
 	if err != nil {
@@ -336,7 +334,7 @@ func (h *UserHandler) UpdateUser(usr *user.User) ([]byte, error) {
 func (h *UserHandler) createUser(usr *user.User) ([]byte, error) {
 
 	logEntry := log.WithField("user", usr)
-	logEntry.Info("call getUser - API")
+	logEntry.Info("call createUser - API")
 
 	if usr.ID != "" {
 		existingUser, err := h.UserService.GetUser(usr.ID)

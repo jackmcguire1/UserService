@@ -1,8 +1,7 @@
 # User Service
 
-[![Build Status](https://travis-ci.org/jackmcguire1/UserService.svg?branch=main)](hhttps://travis-ci.org/jackmcguire1/UserService)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jackmcguire1/UserService)](https://goreportcard.com/report/github.com/jackmcguire1/UserService)
-[![codecov](https://codecov.io/gh/jackmcguire1/UserService/branch/main/graph/badge.svg?token=URT8YBBJFF)](https://codecov.io/gh/jackmcguire1/UserService)
+[![codecov](https://codecov.io/gh/jackmcguire1/UserService/graph/badge.svg?token=URT8YBBJFF)](https://codecov.io/gh/jackmcguire1/UserService)
 
 [git]:    https://git-scm.com/
 [golang]: https://golang.org/
@@ -12,23 +11,25 @@
 [docker]: https://www.docker.com/products/docker-desktop
 
 ## ABOUT
-> This repo contains a go module that exposes a User Microservice
+> This repo contains a go module that exposes a User Microservice using MongoDB as a datastore
 
 ### Prerequisites
 
 - [Git][git]
-- [Go 1.16][golang]+
+- [Go 1.21.1][golang]+
 - [Docker][docker]
 
 
 ### SETUP
+> setup your mongo connection details in docker-compose.yaml
+```yaml
+environment:
+    - MONGO_HOST=mongodb+srv://****
+    - MONGO_DATABASE=***
+    - MONGO_USERS_COLLECTION=users
+  ```
 
-> build the userservice docker container
-```shell
-docker build -t userservice .
-```
-
-> run the stack
+> run the docker-compose stack
 ```shell
 docker-compose up -d
 ```
@@ -37,7 +38,9 @@ docker-compose up -d
 ### Environment Variables
 - EVENTS_URL - external HTTP endpoint provided by interested services
 - LOG_VERBOSITY - warn | error | info | debug
-
+- MONGO_HOST - your mongo host url
+- MONGO_DATABASE - your mongo database
+- MONGO_USERS_COLLECTION - your mongo user's collection
 
 ## REQUIREMENTS
 The service must allow you to:
@@ -45,7 +48,7 @@ The service must allow you to:
 - modify an existing User
 - remove a User
 - return a list of the Users, allowing for filtering by certain criteria (e.g. all Users with the
-country &quot;UK&quot;)
+country &quot;GB&quot;)
 
 The service must include:
 - A sensible storage mechanism for the Users
@@ -56,13 +59,11 @@ The service must include:
 
 - Small user base, no support pagination requests required
 
-- Passwords do not have to be encrypted
-
 - interested services have an exposed HTTP callback endpoint for user events
 
 
 ## IMPROVEMENTS
-- Support paginated events for elastic search queries
+- Support paginated events for search queries
 
 - Password encryption
 
@@ -91,7 +92,8 @@ The service must include:
   *Content:*
     ```json
     {
-      "LogVerbosity": "info"
+      "logVerbosity": "debug",
+      "upTime": "10s"
     }
   ```
 </details>
@@ -106,7 +108,7 @@ The service must include:
 
 * **URL**
 
-  > localhost:7755/user?id={user-id}
+  > localhost:7755/users?id={user-id}
 
 * **Method:**
   `GET`
@@ -122,34 +124,33 @@ The service must include:
   *Content:*
     ```json
     {
-        "ID": "100249558",
-        "FirstName": "Jack",
-        "LastName": "McGuire",
-        "CountryCode": "GB",
-        "NickName": "crazyjack12",
-        "Email": "jack@blah.com",
-        "Password": "blah",
-        "Saved": "2021-04-27T17:03:40+01:00"
+        "_id": "100249558",
+        "firstName": "Jack",
+        "lastName": "McGuire",
+        "countryCode": "GB",
+        "nickName": "crazyjack12",
+        "email": "jack@blah.com",
+        "saved": "2021-04-27T17:03:40+01:00"
     }
   ```
 
 OR <br>
    * *Code:* 200 STATUS OK <br />
-    *Content:* `{}`
+    *Content:* `{"error": "user not found"}`
     
 * **Error Responses:**
 
   * **Code:** 400 BAD REQUEST error <br />
-    **Content:** `error reason`
+    **Content:** `{"error":"reason"}`
     
     OR
     
   * **Code:** 500 INTERNAL SERVER ERROR <br />
-    **Content:** `error reason`
+    **Content:** `{"error":"reason"}`
 
 * **Notes:**
 
- an empty response of `{}` will be returned if user cannot be found
+ a response of `{"error": "user not found"}` will be returned if user cannot be found
  
 </details>
 
@@ -161,7 +162,7 @@ OR <br>
 
 * **URL**
 
-  > localhost:7755/user?id={user-id}
+  > localhost:7755/users?id={user-id}
 
 * **Method:**
   `DELETE`
@@ -177,8 +178,8 @@ OR <br>
   *Content:*
     ```json
     {
-        "Delete": true,
-        "Message": "success"
+        "deleted": true,
+        "message": "success"
     }
   ```
     
@@ -187,10 +188,7 @@ OR <br>
   *  *Code:* 200 <br />
       *Content:*
         ```json
-        {
-            "Delete": false,
-            "Message": "error info"
-        }
+        {"error":"reason"}
       ```
     
     OR
@@ -208,30 +206,30 @@ OR <br>
 
 * **URL**
 
-  > localhost:7755/user
+  > localhost:7755/users
 
 * **Method:**
   `POST`
   
-* **Data Params**
-   **Required:**
+  * **Data Params**
+     **Required:**
  
-   ```
-      {
-          "ID": "100249558",
-          "FirstName": "Jack",
-          "LastName": "McGuire",
-          "CountryCode": "GB",
-          "Email": "jack@blah.com",
-          "Password": "blah1",
-      }
-    ```
-   **OPTIONAL:**
-    ```
-      {
-          "NickName": "crazyjack12",
-      }
-    ```
+     ```
+        {
+            "_id": "100249558",
+            "firstName": "Jack",
+            "lastName": "McGuire",
+            "countryCode": "GB",
+            "email": "jack@blah.com",
+            "nickName": "skr",
+        }
+      ```
+     **OPTIONAL:**
+      ```
+        {
+            "nickName": "crazyjack12",
+        }
+      ```
 
 * **Success Response:**
   
@@ -239,26 +237,24 @@ OR <br>
   *Content:*
    ```json
     {
-        "ID": "100249558",
-        "FirstName": "Jack",
-        "LastName": "McGuire",
-        "CountryCode": "GB",
-        "NickName": "crazyjack12",
-        "Email": "GB",
-        "Password": "BLAH1",
-        "Saved": "2021-04-27T17:03:40+01:00"
+      "_id": "100249558",
+      "firstName": "Jack",
+      "lastName": "McGuire",
+      "countryCode": "GB",
+      "email": "jack@blah.com",
+      "nickName": "skr"
     }
   ```
     
 * **Error Responses:**
 
   *  *Code:* 400 BAD REQUEST <br />
-      *Content:* `error reason`
+      *Content:* `{"error":"reason"}`
     
     OR
     
   * **Code:** 500 INTERNAL SERVER ERROR <br />
-    **Content:** `error reason`
+    **Content:** `{"error":"reason"}`
 
 * **Notes:**
 
@@ -278,7 +274,7 @@ OR <br>
 
 * **URL**
 
-  > localhost:7755/user
+  > localhost:7755/users
 
 * **Method:**
   `PUT`
@@ -286,21 +282,20 @@ OR <br>
 * **Data Params**
    **Required:**
  
-   ```
+   ```json
    {
-           "FirstName": "Jack",
-           "LastName": "McGuire",
-           "CountryCode": "GB",
-           "Email": "GB",
-           "Password": "GB",
-       }
+      "firstName": "Jack",
+      "lastName": "McGuire",
+      "countryCode": "GB",
+      "email": "GB"
+  }
     ```
   
   **OPTIONAL:**
   ```
     {
-        "ID": "100249558",
-        "NickName": "100249558",
+        "_id": "100249558",
+        blah,
     }
   ```
 
@@ -310,14 +305,13 @@ OR <br>
   *Content:*
     ```json
     {
-        "ID": "100249558",
-        "FirstName": "Jack",
-        "LastName": "McGuire",
-        "CountryCode": "GB",
-        "NickName": "crazyjack12",
-        "Email": "jack@blah.com",
-        "Password": "blah1",
-        "Saved": "2021-04-27T17:03:40+01:00"
+        "_id": "100249558",
+        "firstName": "Jack",
+        "lastName": "McGuire",
+        "countryCode": "GB",
+        "nickName": "crazyjack12",
+        "email": "jack@blah.com",
+        "saved": "2021-04-27T17:03:40+01:00"
     }
   ```
     
@@ -343,6 +337,65 @@ OR <br>
 </details>
 
 ### Search/Users/
+
+<details>
+<summary>All Users</summary>
+
+*All Users*
+----
+
+* **URL**
+
+  > localhost:7755/search/users/
+
+* **Method:**
+  `GET`
+
+* **Success Response:**
+
+  *Code:* 200 <br />
+  *Content:*
+    ```json
+    {
+      "users": [
+    	{
+            "_id": "100249558",
+            "firstName": "Jack",
+            "lastName": "McGuire",
+            "countryCode": "GB",
+            "nickName": "crazyjack12",
+            "email": "jack@blah.com",
+            "saved": "2021-04-27T17:03:40+01:00"
+    	}
+      ]
+    }
+  ```
+
+OR <br>
+* *Code:* 200 STATUS OK <br />
+  *Content:*
+  ```
+  {
+  "users": []
+  }
+  ```
+
+* **Error Responses:**
+
+    * **Code:** 400 BAD REQUEST error <br />
+      **Content:** `{"error":"reason"}`
+
+      OR
+
+    * **Code:** 500 INTERNAL SERVER ERROR <br />
+      **Content:** `{"error":"reason"}`
+
+* **Notes:**
+
+'cc' query parameter value will automatically be defaulted into uppercase
+
+</details>
+
 <details>
 <summary>By Country</summary>
 
@@ -367,16 +420,15 @@ OR <br>
   *Content:*
     ```json
     {
-      "Users": [
+      "users": [
     	{
-            "ID": "100249558",
-            "FirstName": "Jack",
-            "LastName": "McGuire",
-            "CountryCode": "GB",
-            "NickName": "crazyjack12",
-            "Email": "jack@blah.com",
-            "Password": "blah1",
-            "Saved": "2021-04-27T17:03:40+01:00"
+            "_id": "100249558",
+            "firstName": "Jack",
+            "lastName": "McGuire",
+            "countryCode": "GB",
+            "nickName": "crazyjack12",
+            "email": "jack@blah.com",
+            "saved": "2021-04-27T17:03:40+01:00"
     	}
       ]
     }
@@ -387,23 +439,23 @@ OR <br>
     *Content:*
     ```
     {
-        "Users": []
+        "users": []
     }
     ```
 
 * **Error Responses:**
 
   * **Code:** 400 BAD REQUEST error <br />
-    **Content:** `error reason`
+    **Content:** `{"error":"reason"}`
     
     OR
     
   * **Code:** 500 INTERNAL SERVER ERROR <br />
-    **Content:** `error reason`
+    **Content:** `{"error":"reason"}`
 
 * **Notes:**
 
-'cc' query parameter will auto be defaulted into uppercase
+'cc' query parameter value will automatically be defaulted into uppercase
  
 </details>
 

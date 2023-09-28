@@ -9,6 +9,7 @@ type Repository interface {
 	GetUsersByCountry(cc string) (users []*User, err error)
 	DeleteUser(string) error
 	PutUser(*User) error
+	GetAllUsers() (users []*User, err error)
 }
 
 type BaseRepository struct{}
@@ -26,5 +27,9 @@ func (repo *BaseRepository) DeleteUser(string) error {
 }
 
 func (repo *BaseRepository) GetUsersByCountry(cc string) (users []*User, err error) {
+	return nil, NotImplementedErr
+}
+
+func (repo *BaseRepository) GetAllUsers() (users []*User, err error) {
 	return nil, NotImplementedErr
 }

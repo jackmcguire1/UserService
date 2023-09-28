@@ -1,8 +1,9 @@
 package user
 
 import (
-	"github.com/jackmcguire1/UserService/pkg/utils"
 	"testing"
+
+	"github.com/jackmcguire1/UserService/pkg/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,7 +34,6 @@ func TestPutUser(t *testing.T) {
 		LastName:    "Doe",
 		CountryCode: "us",
 		Email:       "jack@blah.com",
-		Password:    "123123123",
 	}
 
 	mockRepo := &MockRepository{}
@@ -58,7 +58,6 @@ func TestPutInvalidRequest(t *testing.T) {
 		LastName:    "Doe",
 		CountryCode: "asas",
 		Email:       "@b",
-		Password:    "123123123",
 	}
 
 	svc, err := NewService(&Resources{})

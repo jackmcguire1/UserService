@@ -39,3 +39,13 @@ func (repo *MockRepository) DeleteUser(id string) error {
 	args := repo.Called(id)
 	return args.Error(0)
 }
+
+func (repo *MockRepository) GetAllUsers() (users []*User, err error) {
+	args := repo.Called()
+
+	if args.Get(0) != nil {
+		users = args.Get(0).([]*User)
+	}
+
+	return users, args.Error(1)
+}

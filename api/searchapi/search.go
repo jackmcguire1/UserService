@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/jackmcguire1/UserService/api"
 	"github.com/jackmcguire1/UserService/dom/user"
+	"github.com/jackmcguire1/UserService/pkg/utils"
 )
 
 type SearchHandler struct {
@@ -15,7 +17,7 @@ type SearchHandler struct {
 
 func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 	type UserByCountryResponse struct {
-		Users []*user.User
+		Users []*user.User `json:"users"`
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -27,7 +29,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 			Error("request does not contain 'cc' query parameter")
 
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("missing 'cc'  query parameter"))
+		w.Write(utils.ToRAWJSON(api.HTTPError{Error: "missing 'cc'  query parameter"}))
 
 		return
 	}
@@ -39,7 +41,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 			Error("request does not contain valid 'cc' query parameter")
 
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("invalid 'cc'  query parameter - must be ISO ALPHA-2"))
+		w.Write(utils.ToRAWJSON(api.HTTPError{Error: "invalid 'cc'  query parameter - must be ISO ALPHA-2"}))
 
 		return
 	}
@@ -56,12 +58,42 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 			Error("failed to get users by country code")
 
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 		return
 	}
 
 	data, _ := json.MarshalIndent(&UserByCountryResponse{Users: users}, "", "\t")
+
+	w.Write(data)
+	w.WriteHeader(http.StatusOK)
+
+	return
+}
+
+func (h *SearchHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	type AllUsers struct {
+		Users []*user.User `json:"users"`
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+
+	log.
+		Info("searching for users by country code")
+
+	users, err := h.UserService.GetAllUsers()
+	if err != nil {
+		log.
+			WithError(err).
+			Error("failed to get all users")
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
+
+		return
+	}
+
+	data, _ := json.MarshalIndent(&AllUsers{Users: users}, "", "\t")
 
 	w.Write(data)
 	w.WriteHeader(http.StatusOK)

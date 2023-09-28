@@ -10,6 +10,7 @@ type UserService interface {
 	PutUser(*User) (*User, error)
 	DeleteUser(string) error
 	GetUsersByCountry(string) ([]*User, error)
+	GetAllUsers() ([]*User, error)
 }
 
 type Resources struct {

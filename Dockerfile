@@ -1,5 +1,6 @@
-FROM golang:1.16.2-stretch
+FROM golang:1.21.1-bookworm
 
+ARG BIN_FOLDER=${BIN_FOLDER}
 WORKDIR '/app/'
 
 COPY go.mod .
@@ -10,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o ./out/main ./cmd/
+RUN go build -o ./out/main ./cmd/${BIN_FOLDER}/
 
 
 # This container exposes port 8080 to the outside world
