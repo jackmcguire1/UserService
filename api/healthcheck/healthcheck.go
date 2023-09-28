@@ -20,10 +20,10 @@ type HealthCheckResp struct {
 func (h *HealthCheckHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	w.Write([]byte(utils.ToJSON(&HealthCheckResp{
+	w.Write(utils.ToRAWJSON(&HealthCheckResp{
 		LogVerbosity: h.LogVerbosity,
 		UpTime:       time.Since(h.StartTime).String(),
-	})))
+	}))
 	w.WriteHeader(http.StatusOK)
 
 	return
