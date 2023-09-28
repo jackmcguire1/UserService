@@ -94,7 +94,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				WithField("body", string(reqData)).
 				Error("failed to get user data from request body")
 
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 
 			return
@@ -168,7 +168,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				WithError(err).
 				Error("failed to unmarshal user data from request body")
 
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
 
 			return
