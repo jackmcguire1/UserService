@@ -183,7 +183,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					Warn("failed to create user")
 
 				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user already exists"}))
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusConflict)
 				return
 			}
 
