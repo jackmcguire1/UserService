@@ -17,3 +17,10 @@ services:
       - EVENTS_URL=
     ports:
       - "7755:7755"
+    develop:
+      watch:
+        - action: rebuild
+          files:
+            - ./**/*.go
+            - ./go.mod
+            - ./go.sum
