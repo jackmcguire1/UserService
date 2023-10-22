@@ -13,7 +13,6 @@ services:
       - MONGO_USERS_COLLECTION=users
       - LISTEN_PORT=7755
       - LISTEN_HOST=userservice
-      - LOG_VERBOSITY=debug
       - EVENTS_URL=
     ports:
       - "7755:7755"

@@ -29,11 +29,10 @@ environment:
     - MONGO_USERS_COLLECTION=users
   ```
 
-> run the docker-compose stack
+#### run the docker-compose stack
 ```shell
-docker-compose up -d
+docker-compose up -d && docker compose watch
 ```
-
 
 ### Environment Variables
 - EVENTS_URL - external HTTP endpoint provided by interested services
