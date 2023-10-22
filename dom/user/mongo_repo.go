@@ -69,9 +69,10 @@ func (repo *MongoRepository) PutUser(u *User) error {
 	if err != nil {
 		return err
 	}
-	opts := options.Update().SetUpsert(true)
+	opts := options.Replace().SetUpsert(true) // Set upsert options if needed
 
-	repo.Collection.UpdateOne(context.Background(), filter, bson.M{"$set": data}, opts)
+	//repo.Collection.ReplaceOne(context.Background(), filter, data)
+	_, err = repo.Collection.ReplaceOne(context.Background(), filter, data, opts)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func (repo *MongoRepository) DeleteUser(id string) error {
 	}
 
 	if res.DeletedCount != 1 {
-		err = fmt.Errorf("failed to remove user from repo count:%d", res.DeletedCount)
+		err = fmt.Errorf("failed to remove user from repo count:%d %w", res.DeletedCount, utils.ErrNotFound)
 		return err
 	}
 

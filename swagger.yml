@@ -1,0 +1,282 @@
+---
+openapi: 3.0.1
+info:
+  title: User Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:7755
+paths:
+  /healthcheck:
+    get:
+      tags:
+        - HealthCheck
+      summary: Healthcheck
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthcheckResponse"
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get a User
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "200 UserNotFound":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400 BadRequest":
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500 InternalServerError":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a User
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        200 SuccessfulWithError:
+          description: Successful response with error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500 InternalServerError:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      tags:
+        - Users
+      summary: Update a User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400 BadRequest:
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500 InternalServerError:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags:
+        - Users
+      summary: Create a User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400 BadRequest:
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                400 BadRequest:
+        409 Conflict:
+          description: Conflict error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500 InternalServerError:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /search/users:
+    get:
+      tags:
+        - Search
+      summary: All Users
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersList"
+        200 NoResult:
+          description: Successful response with empty result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyResponse"
+        400 BadRequest:
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500 InternalServerError:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /search/users/by_country:
+    get:
+      tags:
+        - Search
+      summary: By Country
+      parameters:
+        - name: cc
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersList"
+        200 NoResult:
+          description: Successful response with empty result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyResponse"
+        400 BadRequest:
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500 InternalServerError:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    HealthcheckResponse:
+      type: object
+      properties:
+        logVerbosity:
+          type: string
+        upTime:
+          type: string
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        countryCode:
+          type: string
+        nickName:
+          type: string
+        email:
+          type: string
+        saved:
+          type: string
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    DeleteResponse:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+        message:
+          type: string
+    UserUpdateRequest:
+      type: object
+      properties:
+        _id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        countryCode:
+          type: string
+        email:
+          type: string
+        nickName:
+          type: string
+    UsersList:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+    EmptyResponse:
+      type: object
+      properties:
+        users:
+          type: array

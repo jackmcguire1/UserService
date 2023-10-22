@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/jackmcguire1/UserService/api/healthcheck"
 	"github.com/jackmcguire1/UserService/api/searchapi"
 	"github.com/jackmcguire1/UserService/api/userapi"
@@ -17,6 +19,7 @@ import (
 )
 
 var (
+	log                *slog.Logger
 	userService        user.UserService
 	userHandler        *userapi.UserHandler
 	searchHandler      *searchapi.SearchHandler
@@ -34,14 +37,8 @@ var (
 )
 
 func init() {
-	logLevel := os.Getenv("LOG_VERBOSITY")
-	switch logLevel {
-	case "":
-		logLevel = "info"
-		fallthrough
-	default:
-		log.SetLevelFromString(logLevel)
-	}
+	jsonLogHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	log = slog.New(jsonLogHandler)
 
 	mongoHost = os.Getenv("MONGO_HOST")
 	mongoDatabase = os.Getenv("MONGO_DATABASE")
@@ -62,8 +59,9 @@ func init() {
 	})
 	if err != nil {
 		log.
-			WithError(err).
-			Fatal("failed to init user mongo repo")
+			With("error", err).
+			Error("failed to init user mongo repo")
+		panic(err)
 	}
 
 	userService, err = user.NewService(&user.Resources{
@@ -72,16 +70,18 @@ func init() {
 	})
 	if err != nil {
 		log.
-			WithError(err).
-			Fatal("failed to init user service")
+			With("error", err).
+			Error("failed to init user service")
+		panic(err)
 	}
 
-	userHandler = &userapi.UserHandler{UserService: userService}
-	searchHandler = &searchapi.SearchHandler{UserService: userService}
-	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: logLevel, StartTime: time.Now().UTC()}
+	userHandler = &userapi.UserHandler{UserService: userService, Logger: log}
+	searchHandler = &searchapi.SearchHandler{UserService: userService, Logger: log}
+	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: "DEBUG", StartTime: time.Now().UTC(), Logger: log}
 }
 
 func main() {
+	slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
 	s := http.NewServeMux()
 
 	s.Handle("/users", userHandler)
@@ -92,15 +92,35 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", listenHost, listenPort)
 
 	log.
-		WithField("events-url", eventsURL).
+		With("events-url", eventsURL).
 		Info("starting user updates handler")
+
+	httpServer := http.Server{
+		Addr:    addr,
+		Handler: s,
+	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGKILL)
+
+	go func() {
+		_ = <-signals
+		log.Warn("SERVER CLOSING.")
+
+		err := httpServer.Close()
+		if err != nil {
+			log.
+				With("error", err).
+				Error("failed to close http server")
+		}
+	}()
 
 	// POST user updates to URL
 	go func(i chan *user.UserUpdate) {
 		for update := range userUpdates {
 
 			log.
-				WithField("update", utils.ToJSON(update)).
+				With("update", utils.ToJSON(update)).
 				Info("got user update")
 
 			if eventsURL != "" {
@@ -109,7 +129,7 @@ func main() {
 				_, err := http.Post(eventsURL, "application/json", r)
 				if err != nil {
 					log.
-						WithError(err).
+						With("error", err).
 						Error("failed to publish user update")
 				}
 			}
@@ -117,13 +137,14 @@ func main() {
 	}(userUpdates)
 
 	log.
-		WithField("addr", addr).
+		With("addr", addr).
 		Info("starting http server")
 
-	err := http.ListenAndServe(addr, s)
+	err := httpServer.ListenAndServe()
 	if err != nil {
 		log.
-			WithError(err).
-			Fatal("failed to listen and serve")
+			With("error", err).
+			Error("failed to listen and serve")
+		panic(err)
 	}
 }

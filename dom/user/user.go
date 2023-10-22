@@ -2,10 +2,10 @@ package user
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/google/uuid"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
@@ -21,13 +21,13 @@ type User struct {
 }
 
 func (svc *service) GetUser(userID string) (*User, error) {
-	logEntry := log.WithField("user-id", userID)
+	logEntry := slog.With("user-id", userID)
 	logEntry.Info("call GetUser")
 
 	user, err := svc.Repo.GetUser(userID)
 	if err != nil {
 		logEntry.
-			WithError(err).
+			With("error", err).
 			Error("failed to get user")
 
 		return nil, err
@@ -37,7 +37,7 @@ func (svc *service) GetUser(userID string) (*User, error) {
 }
 
 func (svc *service) PutUser(u *User) (*User, error) {
-	logEntry := log.WithField("user", utils.ToJSON(u))
+	logEntry := slog.With("user", utils.ToJSON(u))
 	logEntry.Info("call PutUser")
 
 	if u == nil {
@@ -52,7 +52,7 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		guid, err := uuid.NewUUID()
 		if err != nil {
 			logEntry.
-				WithError(err).
+				With("error", err).
 				Error("failed to generate a new uuid V4")
 
 			return nil, err
@@ -60,7 +60,7 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		u.ID = guid.String()
 
 		logEntry = logEntry.
-			WithField("user-id", u.ID)
+			With("user-id", u.ID)
 
 		logEntry.Debug("generated new uuid for user")
 	}
@@ -76,7 +76,7 @@ func (svc *service) PutUser(u *User) (*User, error) {
 	err := svc.Repo.PutUser(u)
 	if err != nil {
 		logEntry.
-			WithError(err).
+			With("error", err).
 			Error("failed to put user into repository")
 
 		return nil, err
@@ -109,8 +109,8 @@ func (svc *service) DeleteUser(id string) error {
 }
 
 func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
-	logEntry := log.
-		WithField("country-code", countryCode)
+	logEntry := slog.
+		With("country-code", countryCode)
 
 	logEntry.
 		Info("call GetUsersByCountry")
@@ -119,32 +119,32 @@ func (svc *service) GetUsersByCountry(countryCode string) ([]*User, error) {
 	users, err := svc.Repo.GetUsersByCountry(countryCode)
 	if err != nil {
 		logEntry.
-			WithError(err).
+			With("error", err).
 			Error("failed to get all users from repository by country")
 
 		return nil, err
 	}
 
 	logEntry.
-		WithField("user-batch", utils.ToJSON(users)).
+		With("user-batch", utils.ToJSON(users)).
 		Debug("got users from repository")
 
 	return users, nil
 }
 
 func (svc *service) GetAllUsers() ([]*User, error) {
-	log.
+	slog.
 		Info("call GetAllUsers")
 
 	users, err := svc.Repo.GetAllUsers()
 	if err != nil {
-		log.
-			WithError(err).
+		slog.
+			With("error", err).
 			Error("failed to get all users from repository")
 	}
 
-	log.
-		WithField("user-batch", utils.ToJSON(users)).
+	slog.
+		With("user-batch", utils.ToJSON(users)).
 		Debug("got all users from repository")
 
 	return users, err
