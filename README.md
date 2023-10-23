@@ -20,7 +20,7 @@
 - [Docker][docker]
 
 ### SWAGGER HUB
-> https://app.swaggerhub.com/apis/jackmcguire1/User-Service/1.0.0
+> https://app.swaggerhub.com/apis/jackmcguire1/User-Service/1.0.2
 
 ### SETUP
 > setup your mongo connection details in docker-compose.yaml

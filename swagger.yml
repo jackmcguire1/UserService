@@ -2,7 +2,7 @@
 openapi: 3.0.1
 info:
   title: User Service
-  version: 1.0.0
+  version: 1.0.2
 servers:
   - url: http://localhost:7755
 paths:
@@ -30,25 +30,21 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          description: Successful response
+        200:
+          description: Successful or Error response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-        "200 UserNotFound":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "400 BadRequest":
+                oneOf:
+                  - $ref: "#/components/schemas/User"
+                  - $ref: "#/components/schemas/Error"
+        400:
           description: Bad Request error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "500 InternalServerError":
+        500:
           description: Internal Server Error
           content:
             application/json:
@@ -65,19 +61,15 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          description: Successful response
+        200:
+          description: Successful or Error response
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: "#/components/schemas/DeleteResponse"
-        200 SuccessfulWithError:
-          description: Successful response with error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        500 InternalServerError:
+                oneOf:
+                  - $ref: "#/components/schemas/DeleteResponse"
+                  - $ref: "#/components/schemas/Error"
+        500:
           description: Internal Server Error
           content:
             application/json:
@@ -94,19 +86,19 @@ paths:
             schema:
               $ref: "#/components/schemas/UserUpdateRequest"
       responses:
-        "200":
+        200:
           description: Successful response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        400 BadRequest:
+        400:
           description: Bad Request error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        500 InternalServerError:
+        500:
           description: Internal Server Error
           content:
             application/json:
@@ -123,57 +115,53 @@ paths:
             schema:
               $ref: "#/components/schemas/UserUpdateRequest"
       responses:
-        "200":
-          description: Successful response
+        200:
+          description: Successful or Error response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        400 BadRequest:
+        400:
           description: Bad Request error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
                 400 BadRequest:
-        409 Conflict:
+        409:
           description: Conflict error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        500 InternalServerError:
+        500:
           description: Internal Server Error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /search/users:
+  /search/users/:
     get:
       tags:
         - Search
       summary: All Users
       responses:
-        "200":
-          description: Successful response
+        200:
+          description: Successful or Error response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UsersList"
-        200 NoResult:
-          description: Successful response with empty result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EmptyResponse"
-        400 BadRequest:
+                oneOf:
+                  - $ref: "#/components/schemas/UsersList"
+                  - $ref: "#/components/schemas/EmptyResponse"
+        400:
           description: Bad Request error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        500 InternalServerError:
+        500:
           description: Internal Server Error
           content:
             application/json:
@@ -191,25 +179,21 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        200:
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UsersList"
-        200 NoResult:
-          description: Successful response with empty result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EmptyResponse"
-        400 BadRequest:
+                oneOf:
+                  - $ref: "#/components/schemas/UsersList"
+                  - $ref: "#/components/schemas/EmptyResponse"
+        400:
           description: Bad Request error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        500 InternalServerError:
+        500:
           description: Internal Server Error
           content:
             application/json:
