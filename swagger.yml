@@ -150,7 +150,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserUpdateRequest"
+              $ref: "#/components/schemas/CreateUserRequest"
       responses:
         200:
           description: Successful or Error response
@@ -298,6 +298,25 @@ components:
           type: boolean
         message:
           type: string
+    CreateUserRequest:
+      type: object
+      properties:
+        _id:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        countryCode:
+          type: string
+        email:
+          type: string
+        nickName:
+          type: string
+        isAdmin:
+          type: boolean
     UserUpdateRequest:
       type: object
       properties:

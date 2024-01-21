@@ -22,7 +22,7 @@ type CreateUserRequest struct {
 	CountryCode string `json:"countryCode"`
 	Saved       string `json:"saved"`
 	Password    string `json:"password"`
-	IsAdmin     string `json:"isAdmin"`
+	IsAdmin     bool   `json:"isAdmin"`
 }
 
 func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -368,6 +368,7 @@ func (h *UserHandler) createUser(usr *CreateUserRequest) ([]byte, error) {
 		NickName:    usr.NickName,
 		CountryCode: usr.CountryCode,
 		Password:    password,
+		IsAdmin:     usr.IsAdmin,
 	})
 	if err != nil {
 		return nil, err
