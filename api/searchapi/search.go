@@ -2,17 +2,20 @@ package searchapi
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/jackmcguire1/UserService/api"
+	"github.com/jackmcguire1/UserService/api/auth"
 	"github.com/jackmcguire1/UserService/dom/user"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
 
 type SearchHandler struct {
 	UserService user.UserService
+	AuthHandler *auth.Handler
 	Logger      *slog.Logger
 }
 
@@ -27,7 +30,32 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.
+	claims, err := h.AuthHandler.ValidateRequest(r)
+	if err != nil {
+		if errors.Is(err, auth.UnAuthorizedErr) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if errors.Is(err, auth.InvalidRequestErr) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !claims.IsAdmin {
+		h.Logger.
+			With("userID", claims.ID).
+			With("error", "user is not administrator").
+			Error("unauthenticated request")
+
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	logEntry := h.Logger.With("userID", claims.ID)
+
+	logEntry.
 		Info("search users by country request")
 
 	type UserByCountryResponse struct {
@@ -38,7 +66,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	ccParams, ok := r.URL.Query()["cc"]
 	if !ok || len(ccParams[0]) < 1 {
-		h.Logger.
+		logEntry.
 			With("values", r.URL.Query()).
 			Error("request does not contain 'cc' query parameter")
 
@@ -50,7 +78,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	countryCode := strings.ToUpper(ccParams[0])
 	if len(countryCode) != 2 {
-		h.Logger.
+		logEntry.
 			With("country-code", countryCode).
 			Error("request does not contain valid 'cc' query parameter")
 
@@ -60,13 +88,13 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Logger.
+	logEntry.
 		With("country-code", countryCode).
 		Info("searching for users by country code")
 
 	users, err := h.UserService.GetUsersByCountry(countryCode)
 	if err != nil {
-		h.Logger.
+		logEntry.
 			With("error", err).
 			With("country-code", countryCode).
 			Error("failed to get users by country code")
@@ -104,7 +132,29 @@ func (h *SearchHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		Users []*user.User `json:"users"`
 	}
 
-	w.Header().Add("Content-Type", "application/json")
+	claims, err := h.AuthHandler.ValidateRequest(r)
+	if err != nil {
+		if errors.Is(err, auth.UnAuthorizedErr) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if errors.Is(err, auth.InvalidRequestErr) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if !claims.IsAdmin {
+		h.Logger.
+			With("userID", claims.ID).
+			With("error", "user is not administrator").
+			Error("unauthenticated request")
+
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
 	h.Logger.
 		Info("search all users")

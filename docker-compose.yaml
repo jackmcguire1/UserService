@@ -5,12 +5,13 @@ services:
     build:
       context: .
       args:
-        - BIN_FOLDER=mongo
+        - BIN_FOLDER=api
     image: userservice:latest
     environment:
       - MONGO_HOST=mongodb+srv://****
       - MONGO_DATABASE=****
       - MONGO_USERS_COLLECTION=users
+      - JWT_SECRET=****
       - LISTEN_PORT=7755
       - LISTEN_HOST=userservice
       - EVENTS_URL=

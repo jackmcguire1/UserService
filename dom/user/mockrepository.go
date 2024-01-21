@@ -20,6 +20,16 @@ func (repo *MockRepository) GetUser(userId string) (user *User, err error) {
 	return user, args.Error(1)
 }
 
+func (repo *MockRepository) GetUserByEmail(email string) (user *User, err error) {
+	args := repo.Called(email)
+
+	if args.Get(0) != nil {
+		user = args.Get(0).(*User)
+	}
+
+	return user, args.Error(1)
+}
+
 func (repo *MockRepository) PutUser(user *User) error {
 	args := repo.Called(user)
 	return args.Error(0)

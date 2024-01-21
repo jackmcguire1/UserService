@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackmcguire1/UserService/api/auth"
 	"github.com/jackmcguire1/UserService/api/healthcheck"
 	"github.com/jackmcguire1/UserService/api/searchapi"
 	"github.com/jackmcguire1/UserService/api/userapi"
@@ -20,6 +21,7 @@ import (
 
 var (
 	log                *slog.Logger
+	authHandler        *auth.Handler
 	userService        user.UserService
 	userHandler        *userapi.UserHandler
 	searchHandler      *searchapi.SearchHandler
@@ -34,6 +36,9 @@ var (
 
 	userUpdates chan *user.UserUpdate
 	eventsURL   string
+
+	JWTSecret         []byte
+	JWTExpiryDuration time.Duration
 )
 
 func init() {
@@ -49,6 +54,9 @@ func init() {
 
 	userUpdates = make(chan *user.UserUpdate, 1)
 	eventsURL = os.Getenv("EVENTS_URL")
+
+	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
+	JWTExpiryDuration = time.Hour
 
 	var err error
 
@@ -75,8 +83,9 @@ func init() {
 		panic(err)
 	}
 
-	userHandler = &userapi.UserHandler{UserService: userService, Logger: log}
-	searchHandler = &searchapi.SearchHandler{UserService: userService, Logger: log}
+	authHandler = &auth.Handler{JWTSecret: JWTSecret, Expiry: JWTExpiryDuration}
+	userHandler = &userapi.UserHandler{UserService: userService, Logger: log, AuthHandler: authHandler}
+	searchHandler = &searchapi.SearchHandler{UserService: userService, Logger: log, AuthHandler: authHandler}
 	healthCheckHandler = &healthcheck.HealthCheckHandler{LogVerbosity: "DEBUG", StartTime: time.Now().UTC(), Logger: log}
 }
 
@@ -84,6 +93,7 @@ func main() {
 	slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
 	s := http.NewServeMux()
 
+	s.HandleFunc("/sign_in", userHandler.SignIn)
 	s.Handle("/users", userHandler)
 	s.HandleFunc("/search/users/by_country", searchHandler.UsersByCountry)
 	s.HandleFunc("/search/users/", searchHandler.GetAllUsers)

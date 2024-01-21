@@ -1,11 +1,11 @@
 package userapi
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log/slog"
 	"net/http"
 
 	"github.com/jackmcguire1/UserService/api"
@@ -13,9 +13,16 @@ import (
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
 
-type UserHandler struct {
-	UserService user.UserService
-	Logger      *slog.Logger
+type CreateUserRequest struct {
+	ID          string `json:"_id"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	Email       string `json:"email"`
+	NickName    string `json:"nickName"`
+	CountryCode string `json:"countryCode"`
+	Saved       string `json:"saved"`
+	Password    string `json:"password"`
+	IsAdmin     string `json:"isAdmin"`
 }
 
 func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +38,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.
 		With("raw-request", r).
-		Info("got new request")
+		Debug("got new request")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -57,7 +64,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					With("error", err).
 					Warn("user does not exist ")
 
-				w.WriteHeader(http.StatusOK)
+				w.WriteHeader(http.StatusNotFound)
 				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user not found"}))
 
 				return
@@ -153,27 +160,10 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		return
 	case http.MethodPut:
-		reqData, err := ioutil.ReadAll(r.Body)
+		var user *CreateUserRequest
+		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
 			h.Logger.
-				With("error", err).
-				Error("failed to get read data from request body")
-
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
-
-			return
-		}
-
-		h.Logger.
-			With("raw-body", string(reqData)).
-			Info("got body from request")
-
-		var user *user.User
-		err = json.Unmarshal(reqData, &user)
-		if err != nil {
-			h.Logger.
-				With("body", string(reqData)).
 				With("error", err).
 				Error("failed to unmarshal user data from request body")
 
@@ -350,7 +340,7 @@ func (h *UserHandler) UpdateUser(usr *user.User) ([]byte, error) {
 	return b, err
 }
 
-func (h *UserHandler) createUser(usr *user.User) ([]byte, error) {
+func (h *UserHandler) createUser(usr *CreateUserRequest) ([]byte, error) {
 
 	logEntry := h.Logger.With("user", usr)
 	logEntry.Info("call createUser - API")
@@ -366,12 +356,24 @@ func (h *UserHandler) createUser(usr *user.User) ([]byte, error) {
 		}
 	}
 
-	usr, err := h.UserService.PutUser(usr)
+	sha := sha256.New()
+	sha.Write([]byte(usr.Password))
+	password := sha.Sum(nil)
+
+	newUser, err := h.UserService.PutUser(&user.User{
+		ID:          usr.ID,
+		FirstName:   usr.FirstName,
+		LastName:    usr.LastName,
+		Email:       usr.Email,
+		NickName:    usr.NickName,
+		CountryCode: usr.CountryCode,
+		Password:    password,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	b, err := json.MarshalIndent(usr, "", "\t")
+	b, err := json.MarshalIndent(newUser, "", "\t")
 	if err != nil {
 		return nil, err
 	}

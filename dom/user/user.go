@@ -6,9 +6,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
+
+type Claims struct {
+	IsAdmin bool `json:"isAdmin"`
+	jwt.RegisteredClaims
+}
 
 type User struct {
 	ID          string `json:"_id" bson:"_id"`
@@ -18,6 +24,8 @@ type User struct {
 	NickName    string `json:"nickName" bson:"nickName"`
 	CountryCode string `json:"countryCode" bson:"countryCode"`
 	Saved       string `json:"saved" bson:"saved"`
+	Password    []byte `json:"-" bson:"password"`
+	IsAdmin     bool   `json:"is_admin"  bson:"isAdmin"`
 }
 
 func (svc *service) GetUser(userID string) (*User, error) {
@@ -25,6 +33,22 @@ func (svc *service) GetUser(userID string) (*User, error) {
 	logEntry.Info("call GetUser")
 
 	user, err := svc.Repo.GetUser(userID)
+	if err != nil {
+		logEntry.
+			With("error", err).
+			Error("failed to get user")
+
+		return nil, err
+	}
+
+	return user, err
+}
+
+func (svc *service) GetUserByEmail(email string) (*User, error) {
+	logEntry := slog.With("email", email)
+	logEntry.Debug("call GetUser")
+
+	user, err := svc.Repo.GetUserByEmail(email)
 	if err != nil {
 		logEntry.
 			With("error", err).

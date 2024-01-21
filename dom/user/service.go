@@ -7,7 +7,8 @@ type UserUpdate struct {
 
 type UserService interface {
 	GetUser(string) (*User, error)
-	PutUser(*User) (*User, error)
+	GetUserByEmail(string) (*User, error)
+	PutUser(u *User) (*User, error)
 	DeleteUser(string) error
 	GetUsersByCountry(string) ([]*User, error)
 	GetAllUsers() ([]*User, error)

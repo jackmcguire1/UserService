@@ -6,6 +6,43 @@ info:
 servers:
   - url: http://localhost:7755
 paths:
+  /sign_in:
+    post:
+      tags:
+        - Sign_In
+      summary: Authorize session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        200:
+          description: Successful or Error response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/SignInResponse"
+        400:
+          description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Account Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /healthcheck:
     get:
       tags:
@@ -161,6 +198,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error
           content:
@@ -193,6 +236,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error
           content:
@@ -201,6 +250,18 @@ paths:
                 $ref: "#/components/schemas/Error"
 components:
   schemas:
+    SignInRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    SignInResponse:
+      type: object
+      properties:
+        token:
+          type: string
     HealthcheckResponse:
       type: object
       properties:

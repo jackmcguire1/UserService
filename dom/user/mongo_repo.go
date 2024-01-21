@@ -36,8 +36,15 @@ func NewMongoRepo(ctx context.Context, params *MongoRepoParams) (*MongoRepositor
 }
 
 func (repo *MongoRepository) GetUser(userId string) (*User, error) {
+	return repo.GetUserByAttr("_id", userId)
+}
 
-	filter := bson.M{"_id": userId}
+func (repo *MongoRepository) GetUserByEmail(email string) (*User, error) {
+	return repo.GetUserByAttr("email", email)
+}
+
+func (repo *MongoRepository) GetUserByAttr(attr, value string) (*User, error) {
+	filter := bson.M{attr: value}
 	res := repo.Collection.FindOne(context.Background(), filter, nil)
 	if res.Err() != nil {
 		if strings.Contains(res.Err().Error(), "no documents in result") {

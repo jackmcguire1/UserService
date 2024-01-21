@@ -6,6 +6,7 @@ var NotImplementedErr = fmt.Errorf("this method is not implemented")
 
 type Repository interface {
 	GetUser(string) (*User, error)
+	GetUserByEmail(string) (*User, error)
 	GetUsersByCountry(cc string) (users []*User, err error)
 	DeleteUser(string) error
 	PutUser(*User) error
@@ -15,6 +16,10 @@ type Repository interface {
 type BaseRepository struct{}
 
 func (repo *BaseRepository) GetUser(string) (*User, error) {
+	return nil, NotImplementedErr
+}
+
+func (repo *BaseRepository) GetUserByEmail(string) (*User, error) {
 	return nil, NotImplementedErr
 }
 
