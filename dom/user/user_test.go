@@ -39,6 +39,7 @@ func TestPutUser(t *testing.T) {
 	mockRepo := &MockRepository{}
 
 	mockRepo.On("PutUser", user).Return(nil)
+	mockRepo.On("GetUserByEmail", mock.Anything).Return(nil, utils.ErrNotFound)
 	svc, err := NewService(&Resources{
 		Repo: mockRepo,
 	})
