@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -93,6 +94,17 @@ func (svc *service) PutUser(u *User) (*User, error) {
 		return nil, err
 	}
 
+	if u.Email != "" {
+		existingUser, err := svc.GetUserByEmail(u.Email)
+		if err != nil && !errors.Is(err, utils.ErrNotFound) {
+			return nil, err
+		}
+
+		if existingUser != nil && existingUser.ID != u.ID {
+			return nil, fmt.Errorf("user already exists with this email err: %w", utils.AlreadyExists)
+		}
+	}
+
 	u.Saved = time.Now().Format(time.RFC3339)
 	u.CountryCode = strings.ToUpper(u.CountryCode)
 
@@ -175,7 +187,6 @@ func (svc *service) GetAllUsers() ([]*User, error) {
 }
 
 func (u *User) Validate() error {
-
 	if u.CountryCode == "" || len(u.CountryCode) != 2 {
 		return fmt.Errorf("%w - please enter a valid ISO ALPHA-2 country code", utils.ValidationErr)
 	}

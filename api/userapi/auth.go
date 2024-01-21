@@ -78,7 +78,8 @@ func (handler *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.MarshalIndent(&LoginResponse{Token: tokenStr}, "", "\t")
 
-	w.Write(b)
 	w.WriteHeader(http.StatusOK)
+	w.Write(b)
+
 	return
 }

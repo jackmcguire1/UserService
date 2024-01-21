@@ -9,7 +9,7 @@ paths:
   /sign_in:
     post:
       tags:
-        - Sign_In
+        - Authorization
       summary: Authorize session
       requestBody:
         required: true
@@ -121,7 +121,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserUpdateRequest"
+              $ref: "#/components/schemas/UpdateUserRequest"
       responses:
         200:
           description: Successful response
@@ -131,6 +131,12 @@ paths:
                 $ref: "#/components/schemas/User"
         400:
           description: Bad Request error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        409:
+          description: Conflict error
           content:
             application/json:
               schema:
@@ -183,6 +189,14 @@ paths:
       tags:
         - Search
       summary: All Users
+      parameters:
+        - name: Auth
+          in: header
+          required: true
+          description: Bearer token for authentication
+          schema:
+            type: string
+            format: jwt
       responses:
         200:
           description: Successful or Error response
@@ -221,6 +235,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: Auth
+          in: header
+          required: true
+          description: Bearer token for authentication
+          schema:
+            type: string
+            format: jwt
       responses:
         200:
           description: Successful response
@@ -317,7 +338,7 @@ components:
           type: string
         isAdmin:
           type: boolean
-    UserUpdateRequest:
+    UpdateUserRequest:
       type: object
       properties:
         _id:

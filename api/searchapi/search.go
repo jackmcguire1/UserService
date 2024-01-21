@@ -46,16 +46,15 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	if !claims.IsAdmin {
 		h.Logger.
-			With("userID", claims.ID).
+			With("userID", claims.Subject).
 			With("error", "user is not administrator").
 			Error("unauthenticated request")
 
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	logEntry := h.Logger.With("userID", claims.ID)
 
-	logEntry.
+	h.Logger.
 		Info("search users by country request")
 
 	type UserByCountryResponse struct {
@@ -66,7 +65,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	ccParams, ok := r.URL.Query()["cc"]
 	if !ok || len(ccParams[0]) < 1 {
-		logEntry.
+		h.Logger.
 			With("values", r.URL.Query()).
 			Error("request does not contain 'cc' query parameter")
 
@@ -78,7 +77,7 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	countryCode := strings.ToUpper(ccParams[0])
 	if len(countryCode) != 2 {
-		logEntry.
+		h.Logger.
 			With("country-code", countryCode).
 			Error("request does not contain valid 'cc' query parameter")
 
@@ -88,13 +87,13 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logEntry.
+	h.Logger.
 		With("country-code", countryCode).
 		Info("searching for users by country code")
 
 	users, err := h.UserService.GetUsersByCountry(countryCode)
 	if err != nil {
-		logEntry.
+		h.Logger.
 			With("error", err).
 			With("country-code", countryCode).
 			Error("failed to get users by country code")
@@ -107,8 +106,8 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 
 	data, _ := json.MarshalIndent(&UserByCountryResponse{Users: users}, "", "\t")
 
-	w.Write(data)
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 
 	h.Logger.
 		With("users", string(data)).
@@ -118,16 +117,6 @@ func (h *SearchHandler) UsersByCountry(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SearchHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS,GET")
-	w.Header().Add("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Origin,Accept")
-
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	type AllUsers struct {
 		Users []*user.User `json:"users"`
 	}
@@ -148,7 +137,7 @@ func (h *SearchHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	if !claims.IsAdmin {
 		h.Logger.
-			With("userID", claims.ID).
+			With("userID", claims.Subject).
 			With("error", "user is not administrator").
 			Error("unauthenticated request")
 
@@ -173,8 +162,8 @@ func (h *SearchHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	data, _ := json.MarshalIndent(&AllUsers{Users: users}, "", "\t")
 
-	w.Write(data)
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 
 	h.Logger.
 		With("users", string(data)).

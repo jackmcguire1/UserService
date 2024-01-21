@@ -81,8 +81,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Write(userResponse)
 		w.WriteHeader(http.StatusOK)
+		w.Write(userResponse)
 
 		return
 
@@ -144,6 +144,18 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			if errors.Is(err, utils.AlreadyExists) {
+				h.Logger.
+					With("error", err).
+					With("user", user).
+					Error("failed to update user because of conflict")
+
+				w.WriteHeader(http.StatusConflict)
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: err.Error()}))
+
+				return
+			}
+
 			h.Logger.
 				With("error", err).
 				With("user", user).
@@ -155,8 +167,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Write(userResponse)
 		w.WriteHeader(http.StatusOK)
+		w.Write(userResponse)
 
 		return
 	case http.MethodPut:
@@ -181,8 +193,9 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					With("user", user).
 					Warn("failed to create user")
 
-				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user already exists"}))
 				w.WriteHeader(http.StatusConflict)
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user already exists"}))
+
 				return
 			}
 
@@ -209,8 +222,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Write(userResponse)
 		w.WriteHeader(http.StatusCreated)
+		w.Write(userResponse)
 
 		h.Logger.
 			With("response", string(userResponse)).
@@ -250,8 +263,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					With("user-id", userId).
 					Warn("user does not exist")
 
-				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user does not exist"}))
 				w.WriteHeader(http.StatusBadRequest)
+				w.Write(utils.ToRAWJSON(api.HTTPError{Error: "user does not exist"}))
 
 				return
 			}
@@ -275,8 +288,8 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Deleted: true,
 			Message: "success",
 		})
-		w.Write(resp)
 		w.WriteHeader(http.StatusOK)
+		w.Write(resp)
 
 		h.Logger.
 			With("response", string(resp)).
@@ -292,7 +305,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Error("unsupported HTTP method requested")
 
 		w.WriteHeader(http.StatusBadRequest)
-		utils.ToRAWJSON(api.HTTPError{Error: "unsupported HTTP METHOD"})
+		w.Write(utils.ToRAWJSON(api.HTTPError{Error: "unsupported HTTP METHOD"}))
 	}
 
 	return
@@ -341,7 +354,6 @@ func (h *UserHandler) UpdateUser(usr *user.User) ([]byte, error) {
 }
 
 func (h *UserHandler) createUser(usr *CreateUserRequest) ([]byte, error) {
-
 	logEntry := h.Logger.With("user", usr)
 	logEntry.Info("call createUser - API")
 

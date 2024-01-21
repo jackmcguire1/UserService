@@ -36,8 +36,8 @@ func (h *HealthCheckHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		LogVerbosity: h.LogVerbosity,
 		UpTime:       time.Since(h.StartTime).String(),
 	}
-	w.Write(utils.ToRAWJSON(data))
 	w.WriteHeader(http.StatusOK)
+	w.Write(utils.ToRAWJSON(data))
 
 	h.Logger.
 		With("users", utils.ToJSON(data)).

@@ -10,6 +10,10 @@ import (
 	"github.com/jackmcguire1/UserService/dom/user"
 )
 
+const (
+	AUTH_HEADER = "Auth"
+)
+
 var (
 	UnAuthorizedErr   = fmt.Errorf("Unauthorized")
 	InvalidRequestErr = fmt.Errorf("BadRequest")
@@ -61,7 +65,7 @@ func (handler *Handler) ValidateJWT(token string) (usrClaim *user.Claims, err er
 }
 
 func (handler *Handler) ValidateRequest(r *http.Request) (*user.Claims, error) {
-	authHeader := r.Header.Get("Authorization")
+	authHeader := r.Header.Get(AUTH_HEADER)
 
 	items := strings.Split(authHeader, "Bearer ")
 	if len(items) != 2 {

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/jackmcguire1/UserService/api/auth"
 	"github.com/jackmcguire1/UserService/api/healthcheck"
 	"github.com/jackmcguire1/UserService/api/searchapi"
@@ -18,6 +19,16 @@ import (
 	"github.com/jackmcguire1/UserService/dom/user"
 	"github.com/jackmcguire1/UserService/pkg/utils"
 )
+
+type capturingResponseWriter struct {
+	http.ResponseWriter
+	body []byte
+}
+
+func (w *capturingResponseWriter) Write(b []byte) (int, error) {
+	w.body = append(w.body, b...)
+	return w.ResponseWriter.Write(b)
+}
 
 var (
 	log                *slog.Logger
@@ -90,8 +101,7 @@ func init() {
 }
 
 func main() {
-	slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
-	s := http.NewServeMux()
+	s := mux.NewRouter()
 
 	s.HandleFunc("/sign_in", userHandler.SignIn)
 	s.Handle("/users", userHandler)
@@ -105,25 +115,35 @@ func main() {
 		With("events-url", eventsURL).
 		Info("starting user updates handler")
 
-	httpServer := http.Server{
-		Addr:    addr,
-		Handler: s,
+	// Use the headersMiddleware to set headers for all routes
+	headersMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Content-Type", "application/json")
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			if os.Getenv("DEBUG") == "true" {
+				// Create a capturingResponseWriter based on the original ResponseWriter
+				capturingWriter := &capturingResponseWriter{ResponseWriter: w}
+				next.ServeHTTP(capturingWriter, r)
+				log.
+					With("request", utils.ToJSON(r)).
+					With("raw-resp", utils.ToJSON(r)).
+					With("raw-body", string(capturingWriter.body)).
+					Debug("HTTP RESPONSE")
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
 	}
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGKILL)
-
-	go func() {
-		_ = <-signals
-		log.Warn("SERVER CLOSING.")
-
-		err := httpServer.Close()
-		if err != nil {
-			log.
-				With("error", err).
-				Error("failed to close http server")
-		}
-	}()
+	s.Use(headersMiddleware)
 
 	// POST user updates to URL
 	go func(i chan *user.UserUpdate) {
@@ -150,11 +170,22 @@ func main() {
 		With("addr", addr).
 		Info("starting http server")
 
-	err := httpServer.ListenAndServe()
-	if err != nil {
-		log.
-			With("error", err).
-			Error("failed to listen and serve")
-		panic(err)
-	}
+	// Create a channel to receive signals
+	signalChan := make(chan os.Signal, 1)
+
+	// Notify the channel for interrupt, terminate, quit, and kill signals
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
+
+	// Start the HTTP server in a goroutine
+	go func() {
+		err := http.ListenAndServe(addr, s)
+		if err != nil {
+			// Handle the error if needed
+			// For example, log the error or gracefully shut down the server
+			panic(err)
+		}
+	}()
+
+	receivedSig := <-signalChan
+	log.With("signal", receivedSig).Warn("recieved OS SIGNAL")
 }
