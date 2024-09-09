@@ -1,4 +1,4 @@
-FROM golang:1.21.1-bookworm
+FROM golang:1.23.1-bookworm
 
 ARG BIN_FOLDER=${BIN_FOLDER}
 WORKDIR '/app/'
